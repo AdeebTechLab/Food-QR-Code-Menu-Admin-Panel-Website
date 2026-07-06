@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hot N Spicy | Food Delivery</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <!-- Updated path: CSS is in the same folder -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=20260704d">
+<link rel="stylesheet" href="theme-red.css?v=20260706a">
+</head>
+<body>
+
+    <!-- Shared header (overlay, location modal, sidebars, main header) is injected here from header.html -->
+    <div id="header-placeholder"></div>
+
+    <!-- 5. Hero Section -->
+    <section class="hero-wrapper">
+        <div class="hero-background hero-banner">
+            <img src="assets/hero-banner.webp" alt="Hot N Spicy - In A Relationship With Good Food" class="hero-banner-img">
+        </div>
+    </section>
+
+    <!-- 6. Sticky Category Nav & Search -->
+    <div class="menu-controls">
+        <nav class="category-nav">
+            <ul id="horizontal-categories">
+                <!-- Populated by JS from menuData, swipeable via horizontal scroll -->
+            </ul>
+        </nav>
+        <div class="search-container">
+            <div class="search-box">
+                <span class="search-icon"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+                <input type="text" id="menu-search" placeholder="Search for items..." onkeyup="filterMenu()">
+                <button class="search-btn"><svg class="icon" style="width:16px;height:16px;stroke:white" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. Main Menu Content Area -->
+    <main class="menu-content" id="menu-grid">
+        <!-- JS will inject categorized product grids here -->
+    </main>
+
+    <!-- Shared footer (footer + floating action buttons) is injected here from footer.html -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Updated path: JS is in the same folder -->
+    <script src="app.js?v=20260704d"></script>
+</body>
+</html>

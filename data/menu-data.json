@@ -1,0 +1,291 @@
+[
+  {
+    "categoryId": "fifa-deals",
+    "title": "FIFA DEALS",
+    "items": [
+      {
+        "id": 1,
+        "name": "FIFA DUO DEAL",
+        "description": "Crispy Broast Leg (With Fries) + Chicken Reshmi Kabab + Dips",
+        "price": 2300,
+        "badge": "Hot Selling",
+        "image": "fifa-duo-deal.webp"
+      },
+      {
+        "id": 2,
+        "name": "FIFA TRIO DEAL",
+        "description": "2 Crispy Chicken Burgers + 2 Chicken Chatni Rolls + Hot Fries",
+        "price": 2600,
+        "badge": "Best Seller",
+        "image": "fifa-trio-deal.webp"
+      },
+      {
+        "id": 3,
+        "name": "FIFA CHAMP DEAL",
+        "description": "3 Seekh Kabab Chatni Roll + 3 Grilled Beef Burgers + Dips",
+        "price": 4400,
+        "badge": "Trending",
+        "image": "fifa-champ-deal.webp"
+      },
+      {
+        "id": 4,
+        "name": "FIFA FINAL DEAL",
+        "description": "3 Chicken Chatni Roll + 3 Chicken Burgers + Dips",
+        "price": 3700,
+        "badge": "Popular",
+        "image": "fifa-final-deal.webp"
+      }
+    ]
+  },
+  {
+    "categoryId": "mashup-deals",
+    "title": "Mashup Deals",
+    "items": [
+      {
+        "id": 5,
+        "name": "Mashup Deal-01",
+        "description": "3 Chicken Chatni Roll + Chicken Karahi + Rice",
+        "price": 4400,
+        "badge": "New Arrival",
+        "image": "mashup-deal-01.webp"
+      },
+      {
+        "id": 6,
+        "name": "Mashup Deal-03",
+        "description": "4 Mint Lemonade + 2 Chicken Garlic Rolls",
+        "price": 3000,
+        "badge": "New Arrival",
+        "image": "mashup-deal-03.webp"
+      },
+      {
+        "id": 7,
+        "name": "Mashup Deal-05",
+        "description": "Club Sandwich + Juicy Chicken Burger",
+        "price": 2300,
+        "badge": "New Arrival",
+        "image": "mashup-deal-05.webp"
+      },
+      {
+        "id": 8,
+        "name": "Mashup Deal-06",
+        "description": "Crispy Broast (Leg) + Juicy Chicken Burger",
+        "price": 3050,
+        "badge": "New Arrival",
+        "image": "mashup-deal-06.webp"
+      },
+      {
+        "id": 9,
+        "name": "Mashup Deal-07",
+        "description": "Chicken BBQ Shashlik + Grilled Sandwich",
+        "price": 3850,
+        "badge": "New Arrival",
+        "image": "mashup-deal-07.webp"
+      },
+      {
+        "id": 10,
+        "name": "Mashup Deal-08",
+        "description": "BBQ Spicy Club Sandwich + 2 Chicken Rolls",
+        "price": 3300,
+        "badge": "New Arrival",
+        "image": "mashup-deal-08.webp"
+      }
+    ]
+  },
+  {
+    "categoryId": "chinese",
+    "title": "Chinese",
+    "items": [
+      {
+        "id": 11,
+        "name": "Chilli With Rice (Gravy)",
+        "description": "Enjoy the bold, savory flavors of our signature chilli gravy rice.",
+        "price": 1099,
+        "badge": null,
+        "image": "chilli-with-rice-gravy.webp"
+      }
+    ]
+  },
+  {
+    "categoryId": "juices",
+    "title": "Juices",
+    "items": [
+      {
+        "id": 12,
+        "name": "Apple",
+        "description": "Hot N Spicy's Apple Juice is a refreshing blend of fresh apples.",
+        "price": 399,
+        "badge": null,
+        "image": "apple-juice.webp"
+      },
+      {
+        "id": 13,
+        "name": "Falsa",
+        "description": "Hot N Spicy's Falsa Juice, tangy and refreshingly seasonal.",
+        "price": 399,
+        "badge": null,
+        "image": "falsa-juice.webp"
+      },
+      {
+        "id": 14,
+        "name": "Fruit Punch",
+        "description": "Hot N Spicy's Fruit Punch is a vibrant mix of fresh fruits.",
+        "price": 399,
+        "badge": null,
+        "image": "fruit-punch-juice.webp"
+      },
+      {
+        "id": 15,
+        "name": "Grape Fruit",
+        "description": "Hot N Spicy's Grape Fruit Juice is a zesty citrus delight.",
+        "price": 399,
+        "badge": null,
+        "image": "grape-fruit-juice.webp"
+      }
+    ]
+  },
+  {
+    "categoryId": "coffee-tea",
+    "title": "Coffee & Tea",
+    "items": [
+      {
+        "id": 16,
+        "name": "Cold Coffee",
+        "description": "Refresh yourself with the creamy, chilled goodness of our Cold Coffee.",
+        "price": 499,
+        "badge": null,
+        "image": "cold-coffee.webp"
+      }
+    ]
+  },
+  {
+    "categoryId": "extras",
+    "title": "Extras",
+    "items": [
+      {
+        "id": 17,
+        "name": "BBQ Dip Sauce",
+        "description": "Elevate your meals with our smoky BBQ Dip Sauce.",
+        "price": 199,
+        "badge": null,
+        "image": "bbq-dip-sauce.webp"
+      },
+      {
+        "id": 18,
+        "name": "Chatni Dip",
+        "description": "Add a zesty kick to your meals with our Chatni Dip.",
+        "price": 40,
+        "badge": null,
+        "image": "chatni-dip.webp"
+      },
+      {
+        "id": 19,
+        "name": "Coleslaw",
+        "description": "Enjoy the crisp, refreshing flavors of our Coleslaw.",
+        "price": 60,
+        "badge": null,
+        "image": "coleslaw.webp"
+      },
+      {
+        "id": 20,
+        "name": "Disposable Glass",
+        "description": "Simplify your beverage service with our Disposable Glass.",
+        "price": 30,
+        "badge": null,
+        "image": "disposable-glass.webp"
+      }
+    ]
+  },
+  {
+    "categoryId": "tandoor",
+    "title": "Tandoor",
+    "items": [
+      {
+        "id": 21,
+        "name": "Paratha",
+        "description": "Hot N Spicy's Puri Paratha is a crispy, flaky delight.",
+        "price": 90,
+        "badge": null,
+        "image": "paratha.webp"
+      },
+      {
+        "id": 22,
+        "name": "Chapati",
+        "description": "Hot N Spicy's Chapati is a soft, traditional flatbread.",
+        "price": 60,
+        "badge": null,
+        "image": "chapati.webp"
+      },
+      {
+        "id": 23,
+        "name": "Garlic Naan",
+        "description": "Hot N Spicy's Garlic Naan is a flavorful, aromatic bread.",
+        "price": 120,
+        "badge": null,
+        "image": "garlic-naan.webp"
+      },
+      {
+        "id": 24,
+        "name": "Plain Naan",
+        "description": "Hot N Spicy's Plain Naan is a soft, traditional bread.",
+        "price": 60,
+        "badge": null,
+        "image": "plain-naan.webp"
+      },
+      {
+        "id": 25,
+        "name": "Roghani Naan",
+        "description": "Hot N Spicy's Roghani Naan is a rich, buttery bread.",
+        "price": 120,
+        "badge": null,
+        "image": "roghani-naan.webp"
+      }
+    ]
+  },
+  {
+    "categoryId": "beverages",
+    "title": "Beverages.",
+    "items": [
+      {
+        "id": 26,
+        "name": "Water",
+        "description": null,
+        "price": 95,
+        "priceFrom": true,
+        "badge": null,
+        "image": "water.webp"
+      },
+      {
+        "id": 27,
+        "name": "Soft Drink Can",
+        "description": null,
+        "price": 165,
+        "badge": null,
+        "image": "soft-drink-can.webp"
+      },
+      {
+        "id": 28,
+        "name": "Disposable Soft Drink",
+        "description": null,
+        "price": 113,
+        "badge": null,
+        "image": "disposable-soft-drink.webp"
+      },
+      {
+        "id": 29,
+        "name": "1.5 Liter Soft Drink",
+        "description": null,
+        "price": 260,
+        "badge": null,
+        "image": "1-5-liter-soft-drink.webp"
+      },
+      {
+        "id": 30,
+        "name": "Mint Lemonade",
+        "description": null,
+        "price": 250,
+        "badge": null,
+        "image": "mint-lemonade.webp"
+      }
+    ]
+  }
+]
