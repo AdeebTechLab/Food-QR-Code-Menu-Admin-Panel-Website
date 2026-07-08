@@ -4,14 +4,6 @@
     "title": "FIFA DEALS",
     "items": [
       {
-        "id": 1,
-        "name": "FIFA DUO 1",
-        "description": "Crispy Broast Leg (With Fries) + Chicken Reshmi Kabab + Dips",
-        "price": 2500,
-        "badge": "Hot Selling",
-        "image": "cat-cold-drinks.webp"
-      },
-      {
         "id": 2,
         "name": "FIFA TRIO DEAL",
         "description": "2 Crispy Chicken Burgers + 2 Chicken Chatni Rolls + Hot Fries",
