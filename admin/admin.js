@@ -8,11 +8,13 @@
   const app = document.getElementById('app');
   const usernameLabel = document.getElementById('username-label');
   const container = document.getElementById('categories-container');
+  const addCategoryPositionSelect = document.getElementById('add-category-position');
   const saveBtn = document.getElementById('save-btn');
   const saveStatus = document.getElementById('save-status');
   const banner = document.getElementById('banner');
   const categoryTemplate = document.getElementById('category-template');
   const itemTemplate = document.getElementById('item-template');
+  const variantRowTemplate = document.getElementById('variant-row-template');
 
   function showBanner(message, type) {
     banner.textContent = message;
@@ -77,6 +79,37 @@
     menuData.forEach((category, catIndex) => {
       container.appendChild(renderCategory(category, catIndex));
     });
+    syncAddCategoryPositionOptions();
+  }
+
+  // Keeps the "insert new category..." dropdown in sync with the current
+  // category list, so the admin can pick exactly where a new category
+  // should land instead of it always landing at the bottom.
+  function syncAddCategoryPositionOptions() {
+    if (!addCategoryPositionSelect) return;
+    const previousValue = addCategoryPositionSelect.value;
+    addCategoryPositionSelect.innerHTML = '';
+
+    const beginningOpt = document.createElement('option');
+    beginningOpt.value = '0';
+    beginningOpt.textContent = 'At the beginning';
+    addCategoryPositionSelect.appendChild(beginningOpt);
+
+    menuData.forEach((category, idx) => {
+      const opt = document.createElement('option');
+      opt.value = String(idx + 1);
+      opt.textContent = `After "${category.title || category.categoryId || 'Untitled'}"`;
+      addCategoryPositionSelect.appendChild(opt);
+    });
+
+    // Keep the previous selection if it's still a valid index, otherwise
+    // default to inserting at the very end (most common case).
+    const maxValue = menuData.length;
+    if (previousValue !== '' && Number(previousValue) <= maxValue) {
+      addCategoryPositionSelect.value = previousValue;
+    } else {
+      addCategoryPositionSelect.value = String(maxValue);
+    }
   }
 
   function renderCategory(category, catIndex) {
@@ -105,6 +138,7 @@
         price: 0,
         badge: null,
         image: '',
+        variants: [],
       };
       category.items.push(newItem);
       itemsGrid.appendChild(renderItem(newItem, category));
@@ -126,9 +160,20 @@
     const photoInput = node.querySelector('.photo-input');
     const nameInput = node.querySelector('.item-name-input');
     const descInput = node.querySelector('.item-desc-input');
+    const hasVariantsInput = node.querySelector('.item-hasvariants-input');
+    const priceRow = node.querySelector('.item-price-row');
     const priceInput = node.querySelector('.item-price-input');
     const badgeInput = node.querySelector('.item-badge-input');
+    const variantsSection = node.querySelector('.item-variants-section');
+    const variantsList = node.querySelector('.item-variants-list');
+    const addVariantBtn = node.querySelector('.add-variant-btn');
+    const variantsBadgeInput = node.querySelector('.item-badge-input-variants');
+    const priceFromLabel = node.querySelector('.pricefrom-label');
     const priceFromInput = node.querySelector('.item-pricefrom-input');
+    const discountToggleLabel = node.querySelector('.discount-toggle-label');
+    const discountInput = node.querySelector('.item-discount-input');
+    const discountRow = node.querySelector('.item-discount-row');
+    const oldPriceInput = node.querySelector('.item-oldprice-input');
     const bestDealInput = node.querySelector('.item-bestdeal-input');
     const deleteBtn = node.querySelector('.delete-item-btn');
 
@@ -138,8 +183,81 @@
     descInput.value = item.description || '';
     priceInput.value = item.price != null ? item.price : '';
     badgeInput.value = item.badge || '';
+    variantsBadgeInput.value = item.badge || '';
     priceFromInput.checked = !!item.priceFrom;
     bestDealInput.checked = !!item.bestDeal;
+    discountInput.checked = item.oldPrice != null;
+    oldPriceInput.value = item.oldPrice != null ? item.oldPrice : '';
+    discountRow.classList.toggle('hidden', !discountInput.checked);
+
+    const itemHasVariants = Array.isArray(item.variants) && item.variants.length > 0;
+    hasVariantsInput.checked = itemHasVariants;
+    if (!itemHasVariants && !Array.isArray(item.variants)) item.variants = [];
+
+    // --- Toggle between a single price field and the variants list ---
+    function syncVariantsVisibility() {
+      const on = hasVariantsInput.checked;
+      priceRow.classList.toggle('hidden', on);
+      priceFromLabel.classList.toggle('hidden', on);
+      discountToggleLabel.classList.toggle('hidden', on);
+      discountRow.classList.toggle('hidden', on || !discountInput.checked);
+      variantsSection.classList.toggle('hidden', !on);
+    }
+    syncVariantsVisibility();
+
+    function renderVariantRows() {
+      variantsList.innerHTML = '';
+      item.variants.forEach((variant) => variantsList.appendChild(renderVariantRow(variant)));
+    }
+
+    function renderVariantRow(variant) {
+      const row = variantRowTemplate.content.firstElementChild.cloneNode(true);
+      const labelInput = row.querySelector('.variant-label-input');
+      const priceInputEl = row.querySelector('.variant-price-input');
+      const deleteVariantBtn = row.querySelector('.delete-variant-btn');
+
+      labelInput.value = variant.label || '';
+      priceInputEl.value = variant.price != null ? variant.price : '';
+
+      labelInput.addEventListener('input', () => { variant.label = labelInput.value; });
+      priceInputEl.addEventListener('input', () => {
+        const v = parseFloat(priceInputEl.value);
+        variant.price = Number.isNaN(v) ? 0 : v;
+      });
+      deleteVariantBtn.addEventListener('click', () => {
+        const idx = item.variants.indexOf(variant);
+        if (idx !== -1) item.variants.splice(idx, 1);
+        row.remove();
+      });
+
+      return row;
+    }
+
+    renderVariantRows();
+
+    addVariantBtn.addEventListener('click', () => {
+      const newVariant = { label: '', price: 0 };
+      item.variants.push(newVariant);
+      variantsList.appendChild(renderVariantRow(newVariant));
+    });
+
+    hasVariantsInput.addEventListener('change', () => {
+      if (hasVariantsInput.checked) {
+        if (item.variants.length === 0) {
+          item.variants.push({ label: 'Half', price: item.price || 0 });
+          item.variants.push({ label: 'Full', price: item.price || 0 });
+          renderVariantRows();
+        }
+        delete item.price;
+        delete item.oldPrice;
+        discountInput.checked = false;
+      } else {
+        item.price = item.variants[0] ? item.variants[0].price : 0;
+        item.variants = [];
+        priceInput.value = item.price;
+      }
+      syncVariantsVisibility();
+    });
 
     nameInput.addEventListener('input', () => { item.name = nameInput.value; img.alt = nameInput.value; });
     descInput.addEventListener('input', () => { item.description = descInput.value || null; });
@@ -147,10 +265,31 @@
       const v = parseFloat(priceInput.value);
       item.price = Number.isNaN(v) ? 0 : v;
     });
-    badgeInput.addEventListener('input', () => { item.badge = badgeInput.value.trim() || null; });
+    badgeInput.addEventListener('input', () => {
+      item.badge = badgeInput.value.trim() || null;
+      variantsBadgeInput.value = badgeInput.value;
+    });
+    variantsBadgeInput.addEventListener('input', () => {
+      item.badge = variantsBadgeInput.value.trim() || null;
+      badgeInput.value = variantsBadgeInput.value;
+    });
     priceFromInput.addEventListener('change', () => {
       if (priceFromInput.checked) item.priceFrom = true;
       else delete item.priceFrom;
+    });
+    discountInput.addEventListener('change', () => {
+      discountRow.classList.toggle('hidden', !discountInput.checked);
+      if (discountInput.checked) {
+        if (item.oldPrice == null) item.oldPrice = item.price || 0;
+        oldPriceInput.value = item.oldPrice;
+      } else {
+        delete item.oldPrice;
+        oldPriceInput.value = '';
+      }
+    });
+    oldPriceInput.addEventListener('input', () => {
+      const v = parseFloat(oldPriceInput.value);
+      item.oldPrice = Number.isNaN(v) ? 0 : v;
     });
     bestDealInput.addEventListener('change', () => {
       item.bestDeal = bestDealInput.checked;
@@ -221,30 +360,23 @@
     });
   }
 
-  // --- Add category ---
+  // --- Add category (inserted at the position chosen in the dropdown) ---
   document.getElementById('add-category-btn').addEventListener('click', () => {
     const newCategory = { categoryId: '', title: '', items: [] };
-    menuData.push(newCategory);
-    container.appendChild(renderCategory(newCategory, menuData.length - 1));
-  });
-
-  // --- Clear all badges (bulk convenience action) ---
-  document.getElementById('clear-badges-btn').addEventListener('click', () => {
-    if (!confirm('Remove the badge text (e.g. "Best Seller", "Trending") from every item? This does not affect the Best Deals tab.')) return;
-    menuData.forEach((category) => {
-      (category.items || []).forEach((item) => { item.badge = null; });
-    });
+    let insertAt = menuData.length;
+    if (addCategoryPositionSelect) {
+      const parsed = parseInt(addCategoryPositionSelect.value, 10);
+      if (!Number.isNaN(parsed)) insertAt = Math.min(Math.max(parsed, 0), menuData.length);
+    }
+    menuData.splice(insertAt, 0, newCategory);
     renderAll();
-    showBanner('All badges cleared. Click Save Changes to publish.', 'success');
-  });
 
-  // --- Remove every category and item (start fresh) ---
-  document.getElementById('clear-menu-btn').addEventListener('click', () => {
-    if (!confirm('This will remove ALL categories and items from the menu. This cannot be undone once you click Save Changes. Continue?')) return;
-    menuData = [];
-    computeNextId();
-    renderAll();
-    showBanner('All categories and items removed. Click Save Changes to publish, then add your new menu below.', 'success');
+    const newNode = container.children[insertAt];
+    if (newNode) {
+      newNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const titleField = newNode.querySelector('.cat-title-input');
+      if (titleField) titleField.focus();
+    }
   });
 
   // --- Save ---
@@ -292,8 +424,31 @@
         if (!item.name || !item.name.trim()) {
           return `An item in "${category.title}" is missing a name.`;
         }
-        if (item.price == null || Number.isNaN(item.price) || item.price < 0) {
+        const itemHasVariants = Array.isArray(item.variants) && item.variants.length > 0;
+        if (itemHasVariants) {
+          const seenLabels = new Set();
+          for (const variant of item.variants) {
+            if (!variant.label || !variant.label.trim()) {
+              return `"${item.name}" has a size option with no label (e.g. "Half").`;
+            }
+            if (variant.price == null || Number.isNaN(variant.price) || variant.price < 0) {
+              return `"${item.name}" - "${variant.label}" needs a valid price.`;
+            }
+            if (seenLabels.has(variant.label.trim().toLowerCase())) {
+              return `"${item.name}" has two options both named "${variant.label}". Please use unique names.`;
+            }
+            seenLabels.add(variant.label.trim().toLowerCase());
+          }
+        } else if (item.price == null || Number.isNaN(item.price) || item.price < 0) {
           return `"${item.name}" needs a valid price.`;
+        }
+        if (!itemHasVariants && item.oldPrice != null) {
+          if (Number.isNaN(item.oldPrice) || item.oldPrice < 0) {
+            return `"${item.name}" needs a valid old price for its discount.`;
+          }
+          if (item.oldPrice <= item.price) {
+            return `"${item.name}"'s old price must be higher than its current price for the discount to show.`;
+          }
         }
         if (seenIds.has(item.id)) {
           return `Duplicate item id detected for "${item.name}". Please refresh and try again.`;

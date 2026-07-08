@@ -114,6 +114,23 @@ body {
 }
 .hint { color: var(--muted); font-size: 13px; margin: 0; }
 
+.add-category-control { display: flex; align-items: center; gap: 8px; }
+.add-category-position-select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--card);
+  max-width: 220px;
+}
+
+.discount-toggle-label { color: var(--brand-dark); font-weight: 600; }
+.item-discount-row { margin-top: -2px; }
+.discount-price-label { flex: 0 0 auto; }
+.item-oldprice-input { min-width: 70px; }
+
 .category-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -243,6 +260,30 @@ body {
 }
 
 .delete-item-btn { align-self: flex-start; }
+
+.item-variants-section { display: flex; flex-direction: column; gap: 8px; }
+.item-variants-list { display: flex; flex-direction: column; gap: 6px; }
+.variant-row { display: flex; gap: 8px; align-items: center; }
+.variant-label-input {
+  flex: 1;
+  padding: 7px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  font-size: 13.5px;
+  font-family: inherit;
+}
+.variant-price-input {
+  width: 100%;
+  border: none;
+  padding: 7px 0;
+  font-size: 13.5px;
+  font-family: inherit;
+  background: transparent;
+}
+.variant-price-input:focus { outline: none; }
+.delete-variant-btn { flex: 0 0 auto; padding: 4px 9px; font-size: 14px; line-height: 1; }
+.add-variant-btn { align-self: flex-start; }
+.item-badge-input-variants { margin-top: 2px; }
 
 @media (max-width: 560px) {
   .topbar { padding: 12px 16px; }

@@ -24,8 +24,27 @@ function validateMenu(data) {
     for (const item of category.items) {
       if (!item || typeof item !== 'object') return 'Each item must be an object';
       if (typeof item.name !== 'string' || !item.name.trim()) return 'Every item needs a non-empty name';
-      if (typeof item.price !== 'number' || Number.isNaN(item.price) || item.price < 0) {
+
+      const hasVariants = Array.isArray(item.variants) && item.variants.length > 0;
+      if (hasVariants) {
+        for (const variant of item.variants) {
+          if (!variant || typeof variant !== 'object') return `Item "${item.name}" has an invalid size option`;
+          if (typeof variant.label !== 'string' || !variant.label.trim()) {
+            return `Item "${item.name}" has a size option missing a label`;
+          }
+          if (typeof variant.price !== 'number' || Number.isNaN(variant.price) || variant.price < 0) {
+            return `Item "${item.name}" - "${variant.label}" needs a valid non-negative price`;
+          }
+        }
+      } else if (typeof item.price !== 'number' || Number.isNaN(item.price) || item.price < 0) {
         return `Item "${item.name || '(unnamed)'}" needs a valid non-negative price`;
+      } else if (item.oldPrice != null) {
+        if (typeof item.oldPrice !== 'number' || Number.isNaN(item.oldPrice) || item.oldPrice < 0) {
+          return `Item "${item.name}" has an invalid old price for its discount`;
+        }
+        if (item.oldPrice <= item.price) {
+          return `Item "${item.name}"'s old price must be higher than its current price`;
+        }
       }
     }
   }

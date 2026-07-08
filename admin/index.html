@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Menu Admin — Hot N Spicy</title>
+<title>Menu Admin — Bell N Tell</title>
 <link rel="icon" href="/assets/favicon.ico?v=20260708b">
 <link rel="stylesheet" href="/admin/admin.css">
 </head>
@@ -31,9 +31,10 @@
 
     <main class="main">
       <div class="toolbar">
-        <button id="add-category-btn" class="btn btn-secondary">+ Add Category</button>
-        <button id="clear-badges-btn" class="btn btn-secondary">Clear All Badges</button>
-        <button id="clear-menu-btn" class="btn btn-danger">Remove All Categories &amp; Items</button>
+        <div class="add-category-control">
+          <select id="add-category-position" class="add-category-position-select"></select>
+          <button id="add-category-btn" class="btn btn-secondary">+ Add Category</button>
+        </div>
         <p class="hint">Edit any field below, then click <strong>Save Changes</strong> to publish it to the live site.</p>
       </div>
 
@@ -67,11 +68,30 @@
       <div class="item-fields">
         <input type="text" class="item-name-input" placeholder="Item name">
         <textarea class="item-desc-input" placeholder="Description (optional)" rows="2"></textarea>
-        <div class="item-row">
+
+        <label class="checkbox-label">
+          <input type="checkbox" class="item-hasvariants-input"> This item has size/price options (e.g. Half &amp; Full)
+        </label>
+
+        <div class="item-row item-price-row">
           <label class="price-label">Rs. <input type="number" class="item-price-input" min="0" step="1"></label>
           <input type="text" class="item-badge-input" placeholder="Badge (optional), e.g. Best Seller">
         </div>
-        <label class="checkbox-label">
+
+        <label class="checkbox-label discount-toggle-label">
+          <input type="checkbox" class="item-discount-input"> 🏷️ Apply a discount (show old price crossed out)
+        </label>
+        <div class="item-row item-discount-row hidden">
+          <label class="price-label discount-price-label">Old Price Rs. <input type="number" class="item-oldprice-input" min="0" step="1"></label>
+        </div>
+
+        <div class="item-variants-section hidden">
+          <div class="item-variants-list"></div>
+          <button type="button" class="btn btn-secondary btn-sm add-variant-btn">+ Add Option</button>
+          <input type="text" class="item-badge-input item-badge-input-variants" placeholder="Badge (optional), e.g. Best Seller">
+        </div>
+
+        <label class="checkbox-label pricefrom-label">
           <input type="checkbox" class="item-pricefrom-input"> Show price as "From"
         </label>
         <label class="checkbox-label best-deal-label">
@@ -79,6 +99,15 @@
         </label>
       </div>
       <button class="btn btn-danger btn-sm delete-item-btn">Delete</button>
+    </div>
+  </template>
+
+  <!-- Template for a single variant row (e.g. "Half" / "Full") inside an item -->
+  <template id="variant-row-template">
+    <div class="variant-row">
+      <input type="text" class="variant-label-input" placeholder="e.g. Half">
+      <label class="price-label">Rs. <input type="number" class="variant-price-input" min="0" step="1"></label>
+      <button type="button" class="btn btn-danger btn-sm delete-variant-btn">×</button>
     </div>
   </template>
 

@@ -1,8 +1,8 @@
 {
-  "name": "hotnspicy-site",
+  "name": "bellntell-site",
   "version": "1.0.0",
   "private": true,
-  "description": "Hot N Spicy website with an admin panel for managing the menu (Vercel Functions + Vercel Blob storage).",
+  "description": "Bell N Tell website with an admin panel for managing the menu (Vercel Functions + Vercel Blob storage).",
   "engines": {
     "node": ">=20.0.0"
   },

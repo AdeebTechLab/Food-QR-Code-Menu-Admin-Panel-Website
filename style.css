@@ -128,6 +128,10 @@ svg.icon { width: 18px; height: 18px; stroke: currentColor; stroke-width: var(--
 .product-info h4 { font-size: 1rem; font-weight: 700; margin-bottom: 5px; }
 .product-info p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
 .price { font-weight: 800; font-size: 1.05rem; margin-top: 10px; }
+.price-discount { display: flex; align-items: baseline; gap: 8px; }
+.price-old { font-weight: 500; font-size: 0.85rem; color: var(--text-muted); text-decoration: line-through; }
+.price-new { color: var(--brand-green); }
+.badge-discount { background: var(--brand-green); color: white; }
 .product-image-container { position: relative; flex: 0 0 clamp(96px, 38%, 150px); width: clamp(96px, 38%, 150px); align-self: stretch; min-height: 96px; }
 .product-img { width: 100%; height: 100%; background: var(--light-grey); border-radius: 8px; object-fit: cover; display: block; position: absolute; inset: 0; }
 .badge-tag { position: absolute; top: 8px; right: 8px; z-index: 2; background: #ffeb3b; color: #333; font-size: 0.68rem; font-weight: 700; padding: 3px 8px; border-radius: 12px; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.15); }
@@ -174,6 +178,7 @@ svg.icon { width: 18px; height: 18px; stroke: currentColor; stroke-width: var(--
 .pd-content-side { flex: 1; padding: 28px; display: flex; flex-direction: column; overflow-y: auto; min-width: 0; }
 .pd-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 12px; }
 .pd-price { font-size: 1.7rem; font-weight: 800; }
+.pd-price-old { font-size: 1.05rem; font-weight: 500; color: var(--text-muted); text-decoration: line-through; margin-right: 8px; }
 .pd-header-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .pd-icon-btn { background: var(--brand-green); border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .pd-description { color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; padding-bottom: 18px; border-bottom: 1px solid var(--border-grey); margin-bottom: 20px; }
@@ -187,6 +192,18 @@ svg.icon { width: 18px; height: 18px; stroke: currentColor; stroke-width: var(--
 .pd-qty-stepper .qty-count { font-size: 1rem; min-width: 20px; }
 .pd-add-btn { flex: 1; background: var(--brand-green); color: white; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .pd-add-divider { opacity: 0.6; font-weight: 400; }
+
+/* --- Variant Picker (Half / Full / etc.) --- */
+.pd-variant-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.pd-variant-pill { background: var(--white); border: 1.5px solid var(--border-grey); border-radius: 20px; padding: 8px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: border-color 0.15s, background 0.15s; }
+.pd-variant-pill:hover { border-color: var(--brand-green); }
+.pd-variant-pill.active { border-color: var(--brand-green); background: var(--brand-green); color: white; }
+.pd-variant-pill-price { font-weight: 700; opacity: 0.85; }
+
+/* Small quantity badge on a card's "+" button when a multi-variant item
+   already has one or more variants in the cart. */
+.product-action .add-btn { position: relative; }
+.add-btn-badge { position: absolute; top: -6px; right: -6px; background: var(--dark-bg, #222); color: white; font-size: 0.65rem; font-weight: 800; min-width: 16px; height: 16px; border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
 
 /* --- Checkout Details Modal --- */
 .checkout-details-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1300; align-items: center; justify-content: center; padding: 20px; }

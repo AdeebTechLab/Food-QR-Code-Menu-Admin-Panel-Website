@@ -56,6 +56,32 @@ function rebuildItemIndex() {
     });
 }
 
+// --- Variant helpers ---
+// Some items (e.g. "Chicken Wings") come in more than one size/portion -
+// each with its own price (Half/Full, Small/Large, etc.). Those items carry
+// a `variants` array instead of (or in addition to) a flat `price`. A
+// single card is shown for the item; picking "+" lets the customer choose
+// which variant to add, each tracked as its own line in the cart.
+function hasVariants(item) {
+    return !!(item && Array.isArray(item.variants) && item.variants.length > 0);
+}
+
+// The price to show/sort by on the card before a variant is chosen -
+// the lowest-priced variant, so the card reads "From Rs. X".
+function displayPrice(item) {
+    if (hasVariants(item)) {
+        return Math.min(...item.variants.map(v => v.price));
+    }
+    return item.price;
+}
+
+// Builds the unique key used to track a cart line: plain item id for
+// items without variants, or "id::VariantLabel" for a specific variant -
+// this lets Half and Full of the same item sit in the cart as separate lines.
+function cartKey(id, variantLabel) {
+    return variantLabel ? `${id}::${variantLabel}` : `${id}`;
+}
+
 // Resolves an item's `image` field to a real <img src>. Admin-uploaded
 // photos are stored as full Vercel Blob URLs; the original bundled photos
 // are just filenames that live in /assets.
@@ -313,10 +339,29 @@ function initStickyHeaderOffset() {
     }
 }
 
+// True when a plain (non-variant) item has a valid discount configured -
+// an old price higher than its current price.
+function hasDiscount(item) {
+    return !hasVariants(item) && item.oldPrice != null && item.oldPrice > item.price;
+}
+
 function renderProductCardHTML(item) {
     const descHtml = item.description ? `<p>${item.description}</p>` : '';
-    const priceHtml = item.priceFrom ? `<div class="price">From Rs. ${item.price}</div>` : `<div class="price">Rs. ${item.price}</div>`;
-    const badgeHtml = item.bestDeal ? `<div class="badge-tag">Best Deal</div>` : (item.badge ? `<div class="badge-tag">${item.badge}</div>` : '');
+    const showFrom = item.priceFrom || hasVariants(item);
+    let priceHtml;
+    if (hasDiscount(item)) {
+        priceHtml = `<div class="price price-discount"><span class="price-old">Rs. ${item.oldPrice}</span><span class="price-new">Rs. ${item.price}</span></div>`;
+    } else if (showFrom) {
+        priceHtml = `<div class="price">From Rs. ${displayPrice(item)}</div>`;
+    } else {
+        priceHtml = `<div class="price">Rs. ${item.price}</div>`;
+    }
+    const discountPercent = hasDiscount(item) ? Math.round((1 - item.price / item.oldPrice) * 100) : 0;
+    const badgeHtml = item.bestDeal
+        ? `<div class="badge-tag">Best Deal</div>`
+        : (item.badge
+            ? `<div class="badge-tag">${item.badge}</div>`
+            : (hasDiscount(item) ? `<div class="badge-tag badge-discount">${discountPercent}% OFF</div>` : ''));
 
     return `
         <div class="product-card" data-name="${item.name.toLowerCase()}" onclick="openProductDetail(${item.id})">
@@ -458,20 +503,32 @@ function showToast(message) {
 // --- Shopping Cart Logic ---
 let cart = [];
 
-// Returns the HTML for a product card's action area: a plain "+" button
-// if the item isn't in the cart yet, or a remove/qty/add stepper if it is.
+// Returns the HTML for a product card's action area. Items with variants
+// (Half/Full etc.) always show a "+" that opens the variant picker in the
+// product detail modal, since a single card can have several cart lines
+// (one per chosen variant) - a small badge shows the combined quantity
+// already in the cart, if any. Items without variants keep the classic
+// plain "+" button, or a remove/qty/add stepper once added.
 function renderCartActionHTML(id) {
-    const cartItem = cart.find(i => i.id === id);
     const item = allItemsById[id];
     if (!item) return '';
+
+    if (hasVariants(item)) {
+        const totalQty = cart.filter(i => i.id === id).reduce((sum, i) => sum + i.qty, 0);
+        const badge = totalQty > 0 ? `<span class="add-btn-badge">${totalQty}</span>` : '';
+        return `<button class="add-btn" onclick="openProductDetail(${id})" aria-label="Choose size">+${badge}</button>`;
+    }
+
+    const key = cartKey(id);
+    const cartItem = cart.find(i => i.cartKey === key);
 
     if (cartItem) {
         const removeIcon = ICON_TRASH;
         return `
             <div class="qty-stepper">
-                <button class="qty-btn qty-remove" onclick="updateQty(${id}, -1)" aria-label="Remove">${removeIcon}</button>
+                <button class="qty-btn qty-remove" onclick="updateQty('${key}', -1)" aria-label="Remove">${removeIcon}</button>
                 <span class="qty-count">${cartItem.qty}</span>
-                <button class="qty-btn qty-add" onclick="updateQty(${id}, 1)" aria-label="Add">+</button>
+                <button class="qty-btn qty-add" onclick="updateQty('${key}', 1)" aria-label="Add">+</button>
             </div>`;
     }
 
@@ -486,27 +543,43 @@ function refreshCartActionButtons() {
     });
 }
 
-function addToCart(id, qty = 1, instructions = '') {
+// Adds an item to the cart. For items with variants, pass `variantLabel`
+// (e.g. "Half") so it's tracked as its own cart line with that variant's
+// price and shown as "Item Name (Half)" - Half and Full of the same item
+// can then both sit in the cart at once, each with independent quantity.
+function addToCart(id, qty = 1, instructions = '', variantLabel = null) {
     const item = allItemsById[id];
     if (!item) return;
 
-    const existing = cart.find(i => i.id === id);
+    let price = item.price;
+    let displayName = item.name;
+    if (hasVariants(item)) {
+        const variant = item.variants.find(v => v.label === variantLabel) || item.variants[0];
+        price = variant.price;
+        displayName = `${item.name} (${variant.label})`;
+        variantLabel = variant.label;
+    } else {
+        variantLabel = null;
+    }
+
+    const key = cartKey(id, variantLabel);
+    const existing = cart.find(i => i.cartKey === key);
     if (existing) {
         existing.qty += qty;
         if (instructions) existing.instructions = instructions;
     } else {
-        cart.push({ id, name: item.name, price: item.price, qty, instructions: instructions || '' });
+        cart.push({ cartKey: key, id, variant: variantLabel, name: displayName, price, qty, instructions: instructions || '' });
     }
     showToast('Item added to cart');
     updateCartUI();
 }
 
-function updateQty(id, change) {
-    const item = cart.find(i => i.id === id);
+function updateQty(key, change) {
+    const item = cart.find(i => i.cartKey === key);
     if (item) {
         item.qty += change;
         if (item.qty <= 0) {
-            cart = cart.filter(i => i.id !== id);
+            cart = cart.filter(i => i.cartKey !== key);
         }
         updateCartUI();
     }
@@ -516,6 +589,7 @@ function updateQty(id, change) {
 // --- Product Detail Modal ---
 let pdCurrentId = null;
 let pdQty = 1;
+let pdSelectedVariant = null; // label of the currently-chosen variant, or null
 
 function openProductDetail(id) {
     const item = allItemsById[id];
@@ -523,35 +597,85 @@ function openProductDetail(id) {
 
     pdCurrentId = id;
     pdQty = 1;
+    pdSelectedVariant = hasVariants(item) ? item.variants[0].label : null;
 
     document.getElementById('pd-image').src = imageSrc(item.image);
     document.getElementById('pd-image').alt = item.name;
     document.getElementById('pd-name').innerText = item.name;
-    document.getElementById('pd-price').innerText = item.priceFrom ? `From Rs. ${item.price}` : `Rs. ${item.price}`;
     document.getElementById('pd-description').innerText = item.description || '';
     document.getElementById('pd-description').style.display = item.description ? 'block' : 'none';
     document.getElementById('pd-instructions-input').value = '';
     document.getElementById('pd-char-count').innerText = '0/500';
     document.getElementById('pd-qty').innerText = pdQty;
-    document.getElementById('pd-add-price').innerText = `Rs. ${item.price}`;
+
+    renderPdVariantPicker(item);
+    updatePdPricing(item);
 
     document.getElementById('product-detail-overlay').classList.add('active');
     document.body.style.overflow = 'hidden';
+}
+
+// Shows a row of tappable pills (Half / Full / etc.) when the item has
+// variants, so the customer picks a size before adding to cart. Hidden
+// entirely for plain single-price items.
+function renderPdVariantPicker(item) {
+    const wrap = document.getElementById('pd-variant-picker');
+    if (!wrap) return;
+
+    if (!hasVariants(item)) {
+        wrap.innerHTML = '';
+        wrap.style.display = 'none';
+        return;
+    }
+
+    wrap.style.display = 'flex';
+    wrap.innerHTML = item.variants.map(v => `
+        <button type="button" class="pd-variant-pill ${v.label === pdSelectedVariant ? 'active' : ''}"
+            onclick="selectPdVariant('${v.label.replace(/'/g, "\\'")}')">
+            ${v.label} <span class="pd-variant-pill-price">Rs. ${v.price}</span>
+        </button>
+    `).join('');
+}
+
+function selectPdVariant(label) {
+    pdSelectedVariant = label;
+    const item = allItemsById[pdCurrentId];
+    if (!item) return;
+    renderPdVariantPicker(item);
+    updatePdPricing(item);
+}
+
+function currentPdUnitPrice(item) {
+    if (hasVariants(item)) {
+        const variant = item.variants.find(v => v.label === pdSelectedVariant) || item.variants[0];
+        return variant.price;
+    }
+    return item.price;
+}
+
+function updatePdPricing(item) {
+    const unitPrice = currentPdUnitPrice(item);
+    const pdPriceEl = document.getElementById('pd-price');
+    if (hasDiscount(item)) {
+        pdPriceEl.innerHTML = `<span class="pd-price-old">Rs. ${item.oldPrice}</span> Rs. ${unitPrice}`;
+    } else {
+        pdPriceEl.innerText = `Rs. ${unitPrice}`;
+    }
+    document.getElementById('pd-add-price').innerText = `Rs. ${unitPrice * pdQty}`;
 }
 
 function closeProductDetail() {
     document.getElementById('product-detail-overlay').classList.remove('active');
     document.body.style.overflow = '';
     pdCurrentId = null;
+    pdSelectedVariant = null;
 }
 
 function updatePdQty(change) {
     pdQty = Math.max(1, pdQty + change);
     document.getElementById('pd-qty').innerText = pdQty;
     const item = allItemsById[pdCurrentId];
-    if (item) {
-        document.getElementById('pd-add-price').innerText = `Rs. ${item.price * pdQty}`;
-    }
+    if (item) updatePdPricing(item);
 }
 
 function updatePdCharCount() {
@@ -562,7 +686,7 @@ function updatePdCharCount() {
 function addPdToCart() {
     if (pdCurrentId === null) return;
     const instructions = document.getElementById('pd-instructions-input').value.trim();
-    addToCart(pdCurrentId, pdQty, instructions);
+    addToCart(pdCurrentId, pdQty, instructions, pdSelectedVariant);
     closeProductDetail();
 }
 
@@ -572,7 +696,7 @@ function shareProductDetail() {
     if (!item) return;
 
     const shareData = {
-        title: `${item.name} - Hot N Spicy`,
+        title: `${item.name} - Bell N Tell`,
         text: `${item.name} - Rs. ${item.price}\n${item.description || ''}`
     };
 
@@ -611,16 +735,22 @@ function renderUpsellCarousel() {
     const items = getUpsellItems();
     if (items.length === 0) return '';
 
-    const cardsHtml = items.map(item => `
+    const cardsHtml = items.map(item => {
+        const addAction = hasVariants(item) ? `openProductDetail(${item.id})` : `addToCart(${item.id})`;
+        const priceLabel = hasVariants(item)
+            ? `From Rs. ${displayPrice(item)}`
+            : (hasDiscount(item) ? `<span class="price-old">Rs. ${item.oldPrice}</span> Rs. ${item.price}` : `Rs. ${item.price}`);
+        return `
         <div class="upsell-card">
             <div class="upsell-img-wrap">
                 <img src="${imageSrc(item.image)}" alt="${item.name}">
-                <button class="upsell-add-btn" onclick="addToCart(${item.id})">+</button>
+                <button class="upsell-add-btn" onclick="${addAction}">+</button>
             </div>
-            <div class="upsell-price">Rs. ${item.price}</div>
+            <div class="upsell-price">${priceLabel}</div>
             <div class="upsell-name">${item.name}</div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 
     return `
         <div class="upsell-section">
@@ -707,9 +837,9 @@ function updateCartUI() {
                     ${noteHtml}
                 </div>
                 <div class="qty-stepper">
-                    <button class="qty-btn qty-remove" onclick="updateQty(${item.id}, -1)" aria-label="Remove">${removeIcon}</button>
+                    <button class="qty-btn qty-remove" onclick="updateQty('${item.cartKey}', -1)" aria-label="Remove">${removeIcon}</button>
                     <span class="qty-count">${item.qty}</span>
-                    <button class="qty-btn qty-add" onclick="updateQty(${item.id}, 1)" aria-label="Add">+</button>
+                    <button class="qty-btn qty-add" onclick="updateQty('${item.cartKey}', 1)" aria-label="Add">+</button>
                 </div>
             </div>
         `;
@@ -877,7 +1007,7 @@ function sendOrderToWhatsApp({ name, phone, address, orderType }) {
     const addressLine = (orderType === 'Delivery' && address) ? `Delivery Address: ${address}\n` : '';
 
     const message =
-`New Order Request - Hot N Spicy
+`New Order Request - Bell N Tell
 
 Customer Name: ${name}
 Phone: ${phone}
