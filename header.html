@@ -1,21 +1,7 @@
     <!-- Dark Overlay for Sidebars -->
     <div id="page-overlay" class="overlay"></div>
 
-    <!-- 2. Navigation Sidebar -->
-    <nav id="nav-sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <h3>Hot N Spicy</h3>
-            <button class="close-btn" onclick="toggleNav()"><svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
-        </div>
-        <ul class="sidebar-links">
-            <li><a href="franchise.html"><svg class="icon" viewBox="0 0 24 24"><path d="M2 9V6l2-4h16l2 4v3"/><path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M2 9h20"/><path d="M9 22V13h6v9"/></svg> Get a Franchise</a></li>
-            <li><a href="timings.html"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Our Timings</a></li>
-            <li><a href="about.html"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> About Us</a></li>
-        </ul>
-        <div class="sidebar-footer">Powered By <a href="https://adeebtechlab.com/" target="_blank" rel="noopener">Adeeb Tech Lab</a></div>
-    </nav>
-
-    <!-- 3. Cart Sidebar -->
+    <!-- 2. Cart Sidebar -->
     <aside id="cart-sidebar" class="sidebar cart-sidebar">
         <div class="cart-header">
             <h3><span class="cart-header-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span> Your Cart</h3>
@@ -55,6 +41,7 @@
                     </div>
                 </div>
                 <p id="pd-description" class="pd-description"></p>
+                <div id="pd-variant-picker" class="pd-variant-picker" style="display:none;"></div>
                 <div class="pd-instructions">
                     <label for="pd-instructions-input">Special Instructions</label>
                     <textarea id="pd-instructions-input" maxlength="500" placeholder="Please enter instructions about this item" oninput="updatePdCharCount()"></textarea>
@@ -77,27 +64,72 @@
         </div>
     </div>
 
+    <!-- 3c. Checkout Details Modal -->
+    <div id="checkout-details-overlay" class="checkout-details-overlay" onclick="if(event.target===this) closeCheckoutDetails()">
+        <div class="checkout-details-modal">
+            <div class="checkout-details-header">
+                <h3>Almost there!</h3>
+                <button class="close-btn" onclick="closeCheckoutDetails()"><svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+            </div>
+            <div class="checkout-details-body">
+                <label class="cd-label">Order Type</label>
+                <div class="order-type-options">
+                    <button type="button" class="order-type-btn" data-order-type="Delivery" onclick="selectOrderType('Delivery')">Delivery</button>
+                    <button type="button" class="order-type-btn" data-order-type="Pick-Up" onclick="selectOrderType('Pick-Up')">Pick-Up</button>
+                    <button type="button" class="order-type-btn" data-order-type="Car hop" onclick="selectOrderType('Car hop')">Car Hop</button>
+                    <button type="button" class="order-type-btn" data-order-type="Dine-In" onclick="selectOrderType('Dine-In')">Dine-In</button>
+                </div>
+
+                <label class="cd-label" for="cd-name">Full Name</label>
+                <input type="text" id="cd-name" class="cd-input" placeholder="e.g. Ali Khan">
+
+                <label class="cd-label" for="cd-phone">Phone Number</label>
+                <input type="tel" id="cd-phone" class="cd-input" placeholder="e.g. 0300 1234567">
+
+                <div id="cd-address-group">
+                    <label class="cd-label" for="cd-address">Delivery Address</label>
+                    <textarea id="cd-address" class="cd-input cd-textarea" placeholder="House #, street, area, nearest landmark"></textarea>
+                    <button type="button" class="cd-location-btn" onclick="useCurrentLocation()">
+                        <svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                        Share My Current Location
+                    </button>
+                    <span id="cd-location-status" class="cd-location-status"></span>
+                </div>
+
+                <p id="cd-error" class="cd-error" style="display:none;"></p>
+            </div>
+            <div class="checkout-details-footer">
+                <button class="checkout-btn" onclick="confirmCheckoutDetails()">
+                    Continue to WhatsApp
+                    <svg class="icon" style="width:16px;height:16px;stroke:white" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 4. Main Header -->
     <header class="main-header">
         <div class="header-left">
-            <a href="tel:+923092333121" class="contact-pill hide-mobile">
+            <a href="tel:+92616776919" class="contact-pill hide-mobile">
                 <span class="pill-icon-circle">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>
-                </span> +92 309 233 3121
+                </span> 061-6776919
+            </a>
+            <a href="https://wa.me/923099374001?text=Hi%2C%20please%20send%20me%20the%20Bell%20N%20Tell%20menu" target="_blank" rel="noopener" class="contact-pill hide-mobile">
+                <span class="pill-icon-circle">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M17.6 6.32A8.86 8.86 0 0 0 12.05 4a8.94 8.94 0 0 0-7.75 13.4L3 21l3.72-1.28a8.9 8.9 0 0 0 4.32 1.1h.01a8.94 8.94 0 0 0 8.9-8.94 8.87 8.87 0 0 0-2.35-5.56Z"/></svg>
+                </span> 0309-9374001
             </a>
         </div>
         <div class="header-center">
-            <a href="index.html" class="logo-circle header-logo">
-                <img src="assets/adeeb.webp" alt="Hot N Spicy" class="header-logo-img">
+            <a href="index.html" class="logo-badge header-logo">
+                <img src="assets/logo.webp?v=20260708b" alt="Bell N Tell Restaurant" class="header-logo-img">
             </a>
         </div>
         <div class="header-right">
             <button class="icon-btn cart-icon" onclick="toggleCart()">
                 <svg class="icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 <span id="cart-badge" class="badge" style="display:none;">0</span>
-            </button>
-            <button class="icon-btn menu-icon" onclick="toggleNav()">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
             </button>
         </div>
     </header>
