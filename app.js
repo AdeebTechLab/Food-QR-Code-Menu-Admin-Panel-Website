@@ -9,8 +9,8 @@ const ICON_LIST = '<svg class="icon" style="width:15px;height:15px" viewBox="0 0
 const ICON_TAG = '<svg class="icon" style="width:15px;height:15px" viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.42 0l8.58-8.58a1 1 0 0 0 0-1.42Z"/><path d="M7 7h.01"/></svg>';
 const ICON_ARROW_RIGHT = '<svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
 
-// The menu itself now lives in /data/menu-data.json and is served through
-// /api/menu, so it can be edited from /admin without a code change or
+// The menu itself lives in /data/menu-data.json and is fetched directly
+// (no backend), so it can be edited from /admin without a code change or
 // redeploy. `menuData` starts empty and is populated by loadMenuData()
 // below before anything tries to render it.
 let menuData = [];
@@ -37,18 +37,17 @@ function imageSrc(image) {
     return `assets/${image}`;
 }
 
-// Fetches the current menu from /api/menu (which serves the admin-edited
-// copy from Vercel Blob, falling back to the bundled JSON on the server
-// side). Falls back to an empty menu with a console warning if the API
-// itself is unreachable, so a network hiccup doesn't throw and block the
-// rest of the page's init.
+// Fetches the current menu from /data/menu-data.json directly (this file is
+// edited by the static admin panel via GitHub commits). Falls back to an
+// empty menu with a console warning if the file can't be loaded, so a
+// network hiccup doesn't throw and block the rest of the page's init.
 async function loadMenuData() {
     try {
-        const response = await fetch('/api/menu', { cache: 'no-store' });
+        const response = await fetch('/data/menu-data.json', { cache: 'no-store' });
         if (!response.ok) throw new Error(`status ${response.status}`);
         menuData = await response.json();
     } catch (err) {
-        console.error('Failed to load menu data from /api/menu.', err);
+        console.error('Failed to load menu data from /data/menu-data.json.', err);
         menuData = [];
     }
     rebuildItemIndex();
@@ -109,7 +108,7 @@ function unwrapPlaceholder(placeholder) {
 // --- Initialization & Rendering ---
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Load the shared header/footer and the current menu data (from the
-    // admin-editable /api/menu endpoint) in parallel, since nothing below
+    // admin-editable data file) in parallel, since nothing below
     // needs them individually - only once both are ready.
     await Promise.all([loadHeader(), loadFooter(), loadMenuData()]);
 
