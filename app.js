@@ -557,10 +557,9 @@ function renderCartActionHTML(id) {
     const cartItem = cart.find(i => i.cartKey === key);
 
     if (cartItem) {
-        const removeIcon = ICON_TRASH;
         return `
             <div class="qty-stepper">
-                <button class="qty-btn qty-remove" onclick="updateQty('${key}', -1)" aria-label="Remove">${removeIcon}</button>
+                <button class="qty-btn qty-remove" onclick="updateQty('${key}', -1)" aria-label="Decrease">&minus;</button>
                 <span class="qty-count">${cartItem.qty}</span>
                 <button class="qty-btn qty-add" onclick="updateQty('${key}', 1)" aria-label="Add">+</button>
             </div>`;
@@ -638,8 +637,6 @@ function openProductDetail(id) {
     document.getElementById('pd-name').innerText = item.name;
     document.getElementById('pd-description').innerText = item.description || '';
     document.getElementById('pd-description').style.display = item.description ? 'block' : 'none';
-    document.getElementById('pd-instructions-input').value = '';
-    document.getElementById('pd-char-count').innerText = '0/500';
     document.getElementById('pd-qty').innerText = pdQty;
 
     renderPdVariantPicker(item);
@@ -649,9 +646,11 @@ function openProductDetail(id) {
     document.body.style.overflow = 'hidden';
 }
 
-// Shows a row of tappable pills (Half / Full / etc.) when the item has
-// variants, so the customer picks a size before adding to cart. Hidden
-// entirely for plain single-price items.
+// Shows a size/option dropdown (Half / Full, Small / Medium / Large,
+// Bottle, etc.) when the item has variants, so the customer picks one
+// before adding to cart. Hidden entirely for plain single-price items.
+// Driven purely by item.variants, so it works the same way for any set
+// of variant labels - no per-label logic needed.
 function renderPdVariantPicker(item) {
     const wrap = document.getElementById('pd-variant-picker');
     if (!wrap) return;
@@ -662,20 +661,24 @@ function renderPdVariantPicker(item) {
         return;
     }
 
-    wrap.style.display = 'flex';
-    wrap.innerHTML = item.variants.map(v => `
-        <button type="button" class="pd-variant-pill ${v.label === pdSelectedVariant ? 'active' : ''}"
-            onclick="selectPdVariant('${v.label.replace(/'/g, "\\'")}')">
-            ${v.label} <span class="pd-variant-pill-price">Rs. ${v.price}</span>
-        </button>
+    wrap.style.display = 'block';
+    const options = item.variants.map(v => `
+        <option value="${v.label.replace(/"/g, '&quot;')}" ${v.label === pdSelectedVariant ? 'selected' : ''}>
+            ${v.label} — Rs. ${v.price}
+        </option>
     `).join('');
+    wrap.innerHTML = `
+        <label for="pd-variant-select" class="pd-variant-label">Select Option</label>
+        <select id="pd-variant-select" class="pd-variant-select" onchange="selectPdVariant(this.value)">
+            ${options}
+        </select>
+    `;
 }
 
 function selectPdVariant(label) {
     pdSelectedVariant = label;
     const item = allItemsById[pdCurrentId];
     if (!item) return;
-    renderPdVariantPicker(item);
     updatePdPricing(item);
 }
 
@@ -712,34 +715,10 @@ function updatePdQty(change) {
     if (item) updatePdPricing(item);
 }
 
-function updatePdCharCount() {
-    const input = document.getElementById('pd-instructions-input');
-    document.getElementById('pd-char-count').innerText = `${input.value.length}/500`;
-}
-
 function addPdToCart() {
     if (pdCurrentId === null) return;
-    const instructions = document.getElementById('pd-instructions-input').value.trim();
-    addToCart(pdCurrentId, pdQty, instructions, pdSelectedVariant);
+    addToCart(pdCurrentId, pdQty, '', pdSelectedVariant);
     closeProductDetail();
-}
-
-function shareProductDetail() {
-    if (pdCurrentId === null) return;
-    const item = allItemsById[pdCurrentId];
-    if (!item) return;
-
-    const shareData = {
-        title: `${item.name} - Bell N Tell`,
-        text: `${item.name} - Rs. ${item.price}\n${item.description || ''}`
-    };
-
-    if (navigator.share) {
-        navigator.share(shareData).catch(() => {});
-    } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}`);
-        showToast('Copied to clipboard');
-    }
 }
 
 // Picks a handful of add-on items from any category other than the ones
@@ -860,7 +839,6 @@ function updateCartUI() {
     const itemsHtml = cart.map(item => {
         const menuItem = allItemsById[item.id];
         const img = menuItem ? imageSrc(menuItem.image) : '';
-        const removeIcon = ICON_TRASH;
         const noteHtml = item.instructions ? `<span class="cart-item-note">Note: ${item.instructions}</span>` : '';
         return `
             <div class="cart-item">
@@ -871,7 +849,7 @@ function updateCartUI() {
                     ${noteHtml}
                 </div>
                 <div class="qty-stepper">
-                    <button class="qty-btn qty-remove" onclick="updateQty('${item.cartKey}', -1)" aria-label="Remove">${removeIcon}</button>
+                    <button class="qty-btn qty-remove" onclick="updateQty('${item.cartKey}', -1)" aria-label="Decrease">&minus;</button>
                     <span class="qty-count">${item.qty}</span>
                     <button class="qty-btn qty-add" onclick="updateQty('${item.cartKey}', 1)" aria-label="Add">+</button>
                 </div>
@@ -920,6 +898,9 @@ function checkoutViaWhatsApp() {
     document.getElementById('cd-name').value = localStorage.getItem('customerName') || '';
     document.getElementById('cd-phone').value = localStorage.getItem('customerPhone') || '';
     document.getElementById('cd-address').value = localStorage.getItem('customerAddress') || '';
+    document.getElementById('cd-vehicle').value = localStorage.getItem('customerVehicle') || '';
+    document.getElementById('cd-plate').value = localStorage.getItem('customerPlate') || '';
+    document.getElementById('cd-table').value = localStorage.getItem('customerTable') || '';
     document.getElementById('cd-error').style.display = 'none';
     document.getElementById('cd-location-status').textContent = '';
     document.getElementById('cd-location-status').className = 'cd-location-status';
@@ -933,14 +914,22 @@ function closeCheckoutDetails() {
     if (overlay) overlay.classList.remove('active');
 }
 
-// Highlights the chosen order type and shows/hides the address field
-// (only Delivery orders need a drop-off address).
+// Highlights the chosen order type and shows/hides the fields that only
+// apply to that type - a drop-off address for Delivery, vehicle + plate
+// number for Car Hop (so the waiter can spot the car in the lot), and a
+// table number for Dine-In.
 function selectOrderType(type) {
     document.querySelectorAll('.order-type-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.orderType === type);
     });
     const addressGroup = document.getElementById('cd-address-group');
     if (addressGroup) addressGroup.style.display = (type === 'Delivery') ? 'block' : 'none';
+
+    const carhopGroup = document.getElementById('cd-carhop-group');
+    if (carhopGroup) carhopGroup.style.display = (type === 'Car hop') ? 'block' : 'none';
+
+    const tableGroup = document.getElementById('cd-table-group');
+    if (tableGroup) tableGroup.style.display = (type === 'Dine-In') ? 'block' : 'none';
 }
 
 function getSelectedOrderType() {
@@ -992,6 +981,9 @@ function confirmCheckoutDetails() {
     const name = document.getElementById('cd-name').value.trim();
     const phone = document.getElementById('cd-phone').value.trim();
     const address = document.getElementById('cd-address').value.trim();
+    const vehicle = document.getElementById('cd-vehicle').value.trim();
+    const plate = document.getElementById('cd-plate').value.trim();
+    const table = document.getElementById('cd-table').value.trim();
     const orderType = getSelectedOrderType();
 
     if (!name) return showCdError('Please enter your full name.');
@@ -1001,16 +993,26 @@ function confirmCheckoutDetails() {
     if (orderType === 'Delivery' && !address) {
         return showCdError('Please enter your delivery address, or share your current location.');
     }
+    if (orderType === 'Car hop') {
+        if (!vehicle) return showCdError('Please enter your vehicle details (make, model, color).');
+        if (!plate) return showCdError('Please enter your number plate so the waiter can find your car.');
+    }
+    if (orderType === 'Dine-In' && !table) {
+        return showCdError('Please enter your table number.');
+    }
 
     errorEl.style.display = 'none';
 
     localStorage.setItem('customerName', name);
     localStorage.setItem('customerPhone', phone);
     localStorage.setItem('customerAddress', address);
+    localStorage.setItem('customerVehicle', vehicle);
+    localStorage.setItem('customerPlate', plate);
+    localStorage.setItem('customerTable', table);
     localStorage.setItem('orderType', orderType);
 
     closeCheckoutDetails();
-    sendOrderToWhatsApp({ name, phone, address, orderType });
+    sendOrderToWhatsApp({ name, phone, address, vehicle, plate, table, orderType });
 }
 
 function showCdError(message) {
@@ -1019,11 +1021,39 @@ function showCdError(message) {
     errorEl.style.display = 'block';
 }
 
+// Asks /api/order-number for the next sequential order number (00001,
+// 00002, ...), shared across every customer via Vercel Blob. Falls back to
+// a device-local counter (kept in localStorage) if the API is unreachable,
+// so checkout never blocks on it - just loses the cross-device guarantee
+// for that one order.
+async function getNextOrderNumber() {
+    try {
+        const response = await fetch('/api/order-number', { method: 'POST', cache: 'no-store' });
+        if (!response.ok) throw new Error(`status ${response.status}`);
+        const data = await response.json();
+        if (data && data.orderNumber) return data.orderNumber;
+        throw new Error('no orderNumber in response');
+    } catch (err) {
+        console.error('Falling back to local order numbering.', err);
+        const next = parseInt(localStorage.getItem('localOrderCounter') || '1', 10);
+        localStorage.setItem('localOrderCounter', String(next + 1));
+        return String(next).padStart(5, '0');
+    }
+}
+
 // Builds an itemized order summary (including the customer's name, phone,
-// order type, and delivery address) and opens a WhatsApp chat to the
-// restaurant's number with the message pre-filled.
-function sendOrderToWhatsApp({ name, phone, address, orderType }) {
+// order number, order type, and any type-specific details - delivery
+// address, car-hop vehicle/plate, or dine-in table number) and opens a
+// WhatsApp chat to the restaurant's number with the message pre-filled.
+async function sendOrderToWhatsApp({ name, phone, address, vehicle, plate, table, orderType }) {
     if (cart.length === 0) return;
+
+    // Open the tab synchronously, before the `await` below, so it's still
+    // tied to the user's click and browsers don't treat it as a blocked
+    // pop-up. Its URL is filled in once the order number is ready.
+    const whatsappTab = window.open('', '_blank');
+
+    const orderNumber = await getNextOrderNumber();
 
     let subtotal = 0;
     const lines = cart.map(item => {
@@ -1038,15 +1068,23 @@ function sendOrderToWhatsApp({ name, phone, address, orderType }) {
     const ready = getReadyTimeText(orderType);
     const readyPlain = ready.text.replace(/<[^>]*>/g, '');
 
-    const addressLine = (orderType === 'Delivery' && address) ? `Delivery Address: ${address}\n` : '';
+    let detailLines = '';
+    if (orderType === 'Delivery' && address) {
+        detailLines = `Delivery Address: ${address}\n`;
+    } else if (orderType === 'Car hop') {
+        detailLines = `Vehicle: ${vehicle}\nNumber Plate: ${plate}\n`;
+    } else if (orderType === 'Dine-In') {
+        detailLines = `Table Number: ${table}\n`;
+    }
 
     const message =
 `New Order Request - Bell N Tell
 
+Order #${orderNumber}
 Customer Name: ${name}
 Phone: ${phone}
 Order Type: ${orderType}
-${addressLine}
+${detailLines}
 Items:
 ${lines}
 
@@ -1057,5 +1095,11 @@ Grand Total: Rs. ${grandTotal}
 ${readyPlain}`;
 
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+    if (whatsappTab) {
+        whatsappTab.location.href = url;
+    } else {
+        // Pop-up was blocked despite the synchronous open() call - fall
+        // back to a normal navigation attempt.
+        window.open(url, '_blank');
+    }
 }

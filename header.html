@@ -32,9 +32,6 @@
                 <div class="pd-header">
                     <h2 id="pd-price" class="pd-price"></h2>
                     <div class="pd-header-actions">
-                        <button class="pd-icon-btn" onclick="shareProductDetail()" aria-label="Share">
-                            <svg class="icon" style="stroke:white" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98"/><path d="m15.41 6.51-6.82 3.98"/></svg>
-                        </button>
                         <button class="pd-icon-btn" onclick="closeProductDetail()" aria-label="Close">
                             <svg class="icon" style="stroke:white" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                         </button>
@@ -42,16 +39,9 @@
                 </div>
                 <p id="pd-description" class="pd-description"></p>
                 <div id="pd-variant-picker" class="pd-variant-picker" style="display:none;"></div>
-                <div class="pd-instructions">
-                    <label for="pd-instructions-input">Special Instructions</label>
-                    <textarea id="pd-instructions-input" maxlength="500" placeholder="Please enter instructions about this item" oninput="updatePdCharCount()"></textarea>
-                    <span id="pd-char-count" class="pd-char-count">0/500</span>
-                </div>
                 <div class="pd-footer">
                     <div class="qty-stepper pd-qty-stepper">
-                        <button class="qty-btn qty-remove" onclick="updatePdQty(-1)" aria-label="Decrease">
-                            <svg class="icon" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                        </button>
+                        <button class="qty-btn qty-remove" onclick="updatePdQty(-1)" aria-label="Decrease">&minus;</button>
                         <span id="pd-qty" class="qty-count">1</span>
                         <button class="qty-btn qty-add" onclick="updatePdQty(1)" aria-label="Increase">+</button>
                     </div>
@@ -94,6 +84,19 @@
                         Share My Current Location
                     </button>
                     <span id="cd-location-status" class="cd-location-status"></span>
+                </div>
+
+                <div id="cd-carhop-group">
+                    <label class="cd-label" for="cd-vehicle">Vehicle Details</label>
+                    <input type="text" id="cd-vehicle" class="cd-input" placeholder="e.g. White Honda Civic">
+
+                    <label class="cd-label" for="cd-plate">Number Plate</label>
+                    <input type="text" id="cd-plate" class="cd-input" placeholder="e.g. LEA-1234">
+                </div>
+
+                <div id="cd-table-group">
+                    <label class="cd-label" for="cd-table">Table Number</label>
+                    <input type="text" id="cd-table" class="cd-input" placeholder="e.g. 12">
                 </div>
 
                 <p id="cd-error" class="cd-error" style="display:none;"></p>
