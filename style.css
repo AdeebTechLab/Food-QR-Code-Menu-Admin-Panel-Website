@@ -264,7 +264,7 @@ svg.icon { width: 18px; height: 18px; stroke: currentColor; stroke-width: var(--
     .footer-grid { flex-direction: column; text-align: center; align-items: center; padding: 28px 20px; gap: 0; }
     .footer-col { width: 100%; max-width: 360px; padding: 20px 0; }
     .footer-col:not(:last-child) { border-bottom: 1px solid var(--border-grey); }
-    .footer-col.logo-col { padding-top: 0; }
+    .footer-col.logo-col { display: none; }
     .app-badges { justify-content: center; }
     .social-icons { justify-content: center; }
     .product-grid { grid-template-columns: 1fr; }
