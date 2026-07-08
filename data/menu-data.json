@@ -26,6 +26,14 @@
         "price": 3700,
         "badge": "Popular",
         "image": "fifa-final-deal.webp"
+      },
+      {
+        "id": 31,
+        "name": "Fifa cup",
+        "description": "kkkk",
+        "price": 2222,
+        "badge": "",
+        "image": "cat-cold-drinks.webp"
       }
     ]
   },
