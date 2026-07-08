@@ -169,7 +169,7 @@ body {
 
 .items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 14px;
   margin-bottom: 14px;
 }
@@ -183,6 +183,8 @@ body {
   gap: 10px;
   background: #fbfbfc;
   position: relative;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .item-photo {
@@ -225,7 +227,7 @@ body {
 .item-name-input { font-weight: 600; }
 .item-desc-input { resize: vertical; }
 
-.item-row { display: flex; gap: 8px; }
+.item-row { display: flex; gap: 8px; min-width: 0; }
 .price-label {
   display: flex;
   align-items: center;
@@ -235,10 +237,12 @@ body {
   border: 1px solid var(--border);
   border-radius: 7px;
   padding: 0 8px;
-  flex: 0 0 110px;
+  flex: 0 0 100px;
+  min-width: 0;
 }
 .item-price-input {
   width: 100%;
+  min-width: 0;
   border: none;
   padding: 7px 0;
   font-size: 13.5px;
@@ -263,9 +267,12 @@ body {
 
 .item-variants-section { display: flex; flex-direction: column; gap: 8px; }
 .item-variants-list { display: flex; flex-direction: column; gap: 6px; }
-.variant-row { display: flex; gap: 8px; align-items: center; }
+.variant-presets { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.variant-presets-label { font-size: 12px; color: var(--muted); }
+.variant-row { display: flex; gap: 8px; align-items: center; min-width: 0; }
 .variant-label-input {
   flex: 1;
+  min-width: 0;
   padding: 7px 9px;
   border-radius: 7px;
   border: 1px solid var(--border);
@@ -274,6 +281,7 @@ body {
 }
 .variant-price-input {
   width: 100%;
+  min-width: 0;
   border: none;
   padding: 7px 0;
   font-size: 13.5px;

@@ -87,7 +87,12 @@
 
         <div class="item-variants-section hidden">
           <div class="item-variants-list"></div>
-          <button type="button" class="btn btn-secondary btn-sm add-variant-btn">+ Add Option</button>
+          <div class="variant-presets">
+            <span class="variant-presets-label">Quick set:</span>
+            <button type="button" class="btn btn-secondary btn-sm preset-btn" data-preset="Half,Full">Half / Full</button>
+            <button type="button" class="btn btn-secondary btn-sm preset-btn" data-preset="Small,Medium,Large">Small / Medium / Large</button>
+            <button type="button" class="btn btn-secondary btn-sm add-variant-btn">+ Add Option</button>
+          </div>
           <input type="text" class="item-badge-input item-badge-input-variants" placeholder="Badge (optional), e.g. Best Seller">
         </div>
 

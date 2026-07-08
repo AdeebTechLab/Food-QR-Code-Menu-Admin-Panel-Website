@@ -167,6 +167,7 @@
     const variantsSection = node.querySelector('.item-variants-section');
     const variantsList = node.querySelector('.item-variants-list');
     const addVariantBtn = node.querySelector('.add-variant-btn');
+    const presetBtns = node.querySelectorAll('.preset-btn');
     const variantsBadgeInput = node.querySelector('.item-badge-input-variants');
     const priceFromLabel = node.querySelector('.pricefrom-label');
     const priceFromInput = node.querySelector('.item-pricefrom-input');
@@ -239,6 +240,24 @@
       const newVariant = { label: '', price: 0 };
       item.variants.push(newVariant);
       variantsList.appendChild(renderVariantRow(newVariant));
+    });
+
+    // Quick-set buttons (e.g. "Half / Full", "Small / Medium / Large") fill
+    // in the standard labels at once - existing prices are kept where a
+    // label already matches, so re-clicking a preset doesn't wipe prices
+    // already entered.
+    presetBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const labels = btn.dataset.preset.split(',');
+        const existingByLabel = {};
+        item.variants.forEach((v) => { existingByLabel[(v.label || '').trim().toLowerCase()] = v; });
+
+        item.variants = labels.map((label) => {
+          const existing = existingByLabel[label.toLowerCase()];
+          return existing ? existing : { label, price: 0 };
+        });
+        renderVariantRows();
+      });
     });
 
     hasVariantsInput.addEventListener('change', () => {
