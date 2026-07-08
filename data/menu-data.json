@@ -1748,6 +1748,96 @@
         "name": "Mint Margarita",
         "price": 200,
         "image": "cat-cold-drinks.webp"
+      },
+      {
+        "id": 243,
+        "name": "Coca-Cola",
+        "image": "cat-cold-drinks.webp",
+        "variants": [
+          {
+            "label": "Regular (250ml)",
+            "price": 80
+          },
+          {
+            "label": "1.5 Liter",
+            "price": 250
+          }
+        ]
+      },
+      {
+        "id": 244,
+        "name": "Sprite",
+        "image": "cat-cold-drinks.webp",
+        "variants": [
+          {
+            "label": "Regular (250ml)",
+            "price": 80
+          },
+          {
+            "label": "1.5 Liter",
+            "price": 250
+          }
+        ]
+      },
+      {
+        "id": 245,
+        "name": "Fanta",
+        "image": "cat-cold-drinks.webp",
+        "variants": [
+          {
+            "label": "Regular (250ml)",
+            "price": 80
+          },
+          {
+            "label": "1.5 Liter",
+            "price": 250
+          }
+        ]
+      },
+      {
+        "id": 246,
+        "name": "Mirinda",
+        "image": "cat-cold-drinks.webp",
+        "variants": [
+          {
+            "label": "Regular (250ml)",
+            "price": 80
+          },
+          {
+            "label": "1.5 Liter",
+            "price": 250
+          }
+        ]
+      },
+      {
+        "id": 247,
+        "name": "7Up",
+        "image": "cat-cold-drinks.webp",
+        "variants": [
+          {
+            "label": "Regular (250ml)",
+            "price": 80
+          },
+          {
+            "label": "1.5 Liter",
+            "price": 250
+          }
+        ]
+      },
+      {
+        "id": 248,
+        "name": "Pepsi",
+        "image": "cat-cold-drinks.webp",
+        "variants": [
+          {
+            "label": "Regular (250ml)",
+            "price": 80
+          },
+          {
+            "label": "1.5 Liter",
+            "price": 250
+          }
+        ]
       }
     ]
   }
