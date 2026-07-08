@@ -108,8 +108,8 @@ async function loadMenuData() {
     rebuildItemIndex();
 }
 
-// WhatsApp business number (same number shown in the header: +92 309 233 3121)
-const WHATSAPP_NUMBER = "923099374001";
+// WhatsApp business number that orders are sent to at checkout.
+const WHATSAPP_NUMBER = "923441713141";
 
 // --- Shared Header/Footer Loader ---
 // Fetches header.html (overlay, location modal, sidebars, main header)
@@ -191,6 +191,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderMenuGrid();
         initCategoryScrollSpy();
         initSearchPlaceholderCycle();
+
+        // Keep the nav's left/right scroll arrows in sync as the user
+        // drags/swipes the category list or resizes the window.
+        const navListEl = document.getElementById('horizontal-categories');
+        if (navListEl) {
+            navListEl.addEventListener('scroll', updateCategoryNavArrows);
+            window.addEventListener('resize', updateCategoryNavArrows);
+        }
     }
 
     // 5. Keep the category/search bar pinned directly beneath the header,
@@ -233,6 +241,32 @@ function renderCategoryNav() {
         navList.appendChild(li);
         isFirst = false;
     });
+
+    updateCategoryNavArrows();
+}
+
+// Scrolls the horizontal category pill list left/right when the arrow
+// buttons are clicked (mirrors scrollUpsell below).
+function scrollCategoryNav(direction) {
+    const navList = document.getElementById('horizontal-categories');
+    if (!navList) return;
+    navList.scrollBy({ left: direction * 180, behavior: 'smooth' });
+}
+
+// Hides the left arrow when already scrolled to the start, and the right
+// arrow when scrolled to the end, so users aren't shown a dead button.
+function updateCategoryNavArrows() {
+    const navList = document.getElementById('horizontal-categories');
+    if (!navList) return;
+    const nav = navList.closest('.category-nav');
+    if (!nav) return;
+    const leftArrow = nav.querySelector('.cat-nav-arrow-left');
+    const rightArrow = nav.querySelector('.cat-nav-arrow-right');
+    if (!leftArrow || !rightArrow) return;
+
+    const maxScroll = navList.scrollWidth - navList.clientWidth;
+    leftArrow.classList.toggle('hidden', navList.scrollLeft <= 4);
+    rightArrow.classList.toggle('hidden', navList.scrollLeft >= maxScroll - 4);
 }
 
 // Highlights the nav link for whichever category section the user has

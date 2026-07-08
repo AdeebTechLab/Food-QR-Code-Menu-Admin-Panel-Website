@@ -28,9 +28,15 @@
     <!-- 6. Sticky Category Nav & Search -->
     <div class="menu-controls">
         <nav class="category-nav">
+            <button type="button" class="cat-nav-arrow cat-nav-arrow-left" onclick="scrollCategoryNav(-1)" aria-label="Scroll categories left">
+                <svg class="icon" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
             <ul id="horizontal-categories">
                 <!-- Populated by JS from menuData, swipeable via horizontal scroll -->
             </ul>
+            <button type="button" class="cat-nav-arrow cat-nav-arrow-right" onclick="scrollCategoryNav(1)" aria-label="Scroll categories right">
+                <svg class="icon" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
         </nav>
         <div class="search-container">
             <div class="search-box">
