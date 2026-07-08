@@ -9,8 +9,36 @@ const ICON_LIST = '<svg class="icon" style="width:15px;height:15px" viewBox="0 0
 const ICON_TAG = '<svg class="icon" style="width:15px;height:15px" viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.42 0l8.58-8.58a1 1 0 0 0 0-1.42Z"/><path d="M7 7h.01"/></svg>';
 const ICON_ARROW_RIGHT = '<svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
 
-// The menu itself lives in /data/menu-data.json and is fetched directly
-// (no backend), so it can be edited from /admin without a code change or
+// Maps each category's categoryId to its banner photo in /assets. One
+// photo per category, shown above the product grid in that category's
+// section. sizzling-steaks-chicken has no dedicated asset yet, so it
+// falls back to the general chicken photo.
+const CATEGORY_IMAGES = {
+    'appetizer': 'cat-appetizer.webp',
+    'chinese-soups': 'cat-chinese-soups.webp',
+    'fish': 'cat-fish.webp',
+    'chicken': 'cat-chicken.webp',
+    'rice': 'cat-rice.webp',
+    'noodles': 'cat-noodles.webp',
+    'chopsuey': 'cat-chopsuey.webp',
+    'burgers': 'cat-burgers.webp',
+    'sandwiches': 'cat-sandwiches.webp',
+    'english-food': 'cat-english-food.webp',
+    'sizzling-steaks-chicken': 'cat-chicken.webp',
+    'pakistani-food-chicken': 'cat-pakistani-chicken.webp',
+    'pakistani-food-mutton': 'cat-pakistani-mutton.webp',
+    'bar-b-q': 'cat-bar-bq.webp',
+    'special-deals': 'deal-combo.webp',
+    'tandoor': 'cat-tandoor.webp',
+    'royal-drinks': 'cat-royal-drinks.webp',
+    'ice-cream': 'cat-ice-cream.webp',
+    'seasonal-fresh-juices': 'cat-juices.webp',
+    'milk-shakes': 'cat-milk-shakes.webp',
+    'cold-drinks': 'cat-cold-drinks.webp'
+};
+
+// The menu itself now lives in /data/menu-data.json and is served through
+// /api/menu, so it can be edited from /admin without a code change or
 // redeploy. `menuData` starts empty and is populated by loadMenuData()
 // below before anything tries to render it.
 let menuData = [];
@@ -37,24 +65,25 @@ function imageSrc(image) {
     return `assets/${image}`;
 }
 
-// Fetches the current menu from /data/menu-data.json directly (this file is
-// edited by the static admin panel via GitHub commits). Falls back to an
-// empty menu with a console warning if the file can't be loaded, so a
-// network hiccup doesn't throw and block the rest of the page's init.
+// Fetches the current menu from /api/menu (which serves the admin-edited
+// copy from Vercel Blob, falling back to the bundled JSON on the server
+// side). Falls back to an empty menu with a console warning if the API
+// itself is unreachable, so a network hiccup doesn't throw and block the
+// rest of the page's init.
 async function loadMenuData() {
     try {
-        const response = await fetch('/data/menu-data.json', { cache: 'no-store' });
+        const response = await fetch('/api/menu', { cache: 'no-store' });
         if (!response.ok) throw new Error(`status ${response.status}`);
         menuData = await response.json();
     } catch (err) {
-        console.error('Failed to load menu data from /data/menu-data.json.', err);
+        console.error('Failed to load menu data from /api/menu.', err);
         menuData = [];
     }
     rebuildItemIndex();
 }
 
 // WhatsApp business number (same number shown in the header: +92 309 233 3121)
-const WHATSAPP_NUMBER = "923092333121";
+const WHATSAPP_NUMBER = "923099374001";
 
 // --- Shared Header/Footer Loader ---
 // Fetches header.html (overlay, location modal, sidebars, main header)
@@ -108,7 +137,7 @@ function unwrapPlaceholder(placeholder) {
 // --- Initialization & Rendering ---
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Load the shared header/footer and the current menu data (from the
-    // admin-editable data file) in parallel, since nothing below
+    // admin-editable /api/menu endpoint) in parallel, since nothing below
     // needs them individually - only once both are ready.
     await Promise.all([loadHeader(), loadFooter(), loadMenuData()]);
 
@@ -118,15 +147,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // fail gracefully instead of throwing and silently blocking every other
     // click handler on the page.
     overlay = document.getElementById('page-overlay');
-    navSidebar = document.getElementById('nav-sidebar');
     cartSidebar = document.getElementById('cart-sidebar');
 
-    if (!overlay || !navSidebar || !cartSidebar) {
-        console.error('Header did not load correctly - menu/cart buttons will not work. Try a hard refresh (Ctrl/Cmd+Shift+R).');
+    if (!overlay || !cartSidebar) {
+        console.error('Header did not load correctly - the cart button will not work. Try a hard refresh (Ctrl/Cmd+Shift+R).');
     } else {
-        // Clicking the dark background closes both sidebars
+        // Clicking the dark background closes the cart sidebar
         overlay.addEventListener('click', () => {
-            navSidebar.classList.remove('open');
             cartSidebar.classList.remove('open');
             overlay.classList.remove('active');
         });
@@ -148,56 +175,122 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateCartUI();
 });
 
+function getBestDealItems() {
+    const items = [];
+    menuData.forEach(category => {
+        category.items.forEach(item => {
+            if (item.bestDeal) items.push(item);
+        });
+    });
+    return items;
+}
+
 function renderCategoryNav() {
     const navList = document.getElementById('horizontal-categories');
     if (!navList) return;
 
     navList.innerHTML = '';
-    menuData.forEach((category, index) => {
+
+    const hasBestDeals = getBestDealItems().length > 0;
+    let isFirst = true;
+
+    if (hasBestDeals) {
         const li = document.createElement('li');
-        li.innerHTML = `<a href="#${category.categoryId}" data-category="${category.categoryId}" class="${index === 0 ? 'active-category' : ''}">${category.title}</a>`;
+        li.innerHTML = `<a href="#best-deals" data-category="best-deals" class="active-category">Best Deals</a>`;
         navList.appendChild(li);
+        isFirst = false;
+    }
+
+    menuData.forEach((category) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a href="#${category.categoryId}" data-category="${category.categoryId}" class="${isFirst ? 'active-category' : ''}">${category.title}</a>`;
+        navList.appendChild(li);
+        isFirst = false;
     });
 }
 
-// Highlights the nav link for whichever category section is currently
-// in view as the user scrolls, and keeps that pill scrolled into sight.
+// Highlights the nav link for whichever category section the user has
+// actually scrolled to, and keeps that pill scrolled into sight.
+//
+// Uses a single "activation line" just below the sticky nav, and picks
+// whichever section's top has scrolled above that line (the last one to
+// do so). This is deliberately NOT an IntersectionObserver with a large
+// trigger band: a big band would mark a very short section (e.g. a
+// category with only one item, like "Chinese") active as soon as it
+// merely entered the band, even while the user was still looking at the
+// previous category above it. Tracking exact section-top position against
+// one line stays correct no matter how tall or short a section is.
 function initCategoryScrollSpy() {
-    const sections = document.querySelectorAll('.menu-category');
+    const sections = Array.from(document.querySelectorAll('.menu-category'));
     const navList = document.getElementById('horizontal-categories');
     if (!sections.length || !navList) return;
 
+    let lastActiveId = null;
+    // On page load, the sticky nav bar sits below the tall hero image in
+    // normal document flow (it hasn't "stuck" yet), so it can be entirely
+    // off-screen at first paint. Calling scrollIntoView() on its pill at
+    // that moment makes the browser auto-scroll the whole page down to
+    // reveal it - which pushes the hero image up under the sticky header
+    // right on load. We skip scrollIntoView for this first, initial sync
+    // and only use it for real changes triggered by the user scrolling.
+    let hasSynced = false;
+
     const setActiveCategory = (id) => {
+        if (id === lastActiveId) return;
+        lastActiveId = id;
+
         navList.querySelectorAll('a').forEach(a => a.classList.remove('active-category'));
         const activeLink = navList.querySelector(`a[data-category="${id}"]`);
         if (activeLink) {
             activeLink.classList.add('active-category');
-            activeLink.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            if (hasSynced) {
+                activeLink.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
         }
     };
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                setActiveCategory(entry.target.id);
-            }
-        });
-    }, { rootMargin: '-140px 0px -50% 0px', threshold: 0 });
+    function getActivationLine() {
+        const controls = document.querySelector('.menu-controls');
+        return (controls ? controls.getBoundingClientRect().bottom : 140) + 4;
+    }
 
-    sections.forEach(section => observer.observe(section));
+    let ticking = false;
+    function updateActive() {
+        ticking = false;
 
-    // Fallback: short trailing categories (like the last one on the page)
-    // can end the page's scroll range before their heading ever enters the
-    // IntersectionObserver's band above, leaving the previous category
-    // stuck as "active". Once the user is within a few px of the bottom of
-    // the page, force the last category to be marked active directly.
-    const lastSection = sections[sections.length - 1];
-    window.addEventListener('scroll', () => {
+        // Within a few px of the very bottom of the page, always activate
+        // the last section - handles short trailing categories that might
+        // never fully cross the activation line on their own.
         const scrolledToBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
         if (scrolledToBottom) {
-            setActiveCategory(lastSection.id);
+            setActiveCategory(sections[sections.length - 1].id);
+            hasSynced = true;
+            return;
         }
-    }, { passive: true });
+
+        const line = getActivationLine();
+        let current = sections[0];
+        for (const section of sections) {
+            if (section.getBoundingClientRect().top <= line) {
+                current = section;
+            } else {
+                break;
+            }
+        }
+        setActiveCategory(current.id);
+        hasSynced = true;
+    }
+
+    function onScroll() {
+        if (!ticking) {
+            requestAnimationFrame(updateActive);
+            ticking = true;
+        }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    updateActive();
 }
 
 // Keeps .menu-controls (category nav + search) pinned directly below the
@@ -220,58 +313,62 @@ function initStickyHeaderOffset() {
     }
 }
 
+function renderProductCardHTML(item) {
+    const descHtml = item.description ? `<p>${item.description}</p>` : '';
+    const priceHtml = item.priceFrom ? `<div class="price">From Rs. ${item.price}</div>` : `<div class="price">Rs. ${item.price}</div>`;
+    const badgeHtml = item.bestDeal ? `<div class="badge-tag">Best Deal</div>` : (item.badge ? `<div class="badge-tag">${item.badge}</div>` : '');
+
+    return `
+        <div class="product-card" data-name="${item.name.toLowerCase()}" onclick="openProductDetail(${item.id})">
+            <div class="product-info">
+                <div>
+                    <h4>${item.name}</h4>
+                    ${descHtml}
+                </div>
+                ${priceHtml}
+            </div>
+            <div class="product-image-container">
+                ${badgeHtml}
+                <img class="product-img" src="${imageSrc(item.image)}" alt="${item.name}">
+                <div class="product-action" id="cart-action-${item.id}" onclick="event.stopPropagation()">${renderCartActionHTML(item.id)}</div>
+            </div>
+        </div>
+    `;
+}
+
 function renderMenuGrid() {
     const gridContainer = document.getElementById('menu-grid');
     gridContainer.innerHTML = ''; // Clear container
+
+    // Virtual "Best Deals" section: pulls in every item tagged as a best
+    // deal (via the admin panel) without removing it from its own category
+    // below, so the same item legitimately appears in both places.
+    const bestDeals = getBestDealItems();
+    if (bestDeals.length > 0) {
+        const bestSection = document.createElement('section');
+        bestSection.classList.add('menu-category');
+        bestSection.id = 'best-deals';
+        bestSection.innerHTML = `<h2>Best Deals</h2><div class="product-grid">${bestDeals.map(renderProductCardHTML).join('')}</div>`;
+        gridContainer.appendChild(bestSection);
+    }
 
     menuData.forEach(category => {
         // Create Section
         const section = document.createElement('section');
         section.classList.add('menu-category');
         section.id = category.categoryId;
-        
-        let html = `<h2>${category.title}</h2><div class="product-grid">`;
 
-        // Create Cards
-        category.items.forEach(item => {
-            const badgeHtml = item.badge ? `<div class="badge-tag">${item.badge}</div>` : '';
-            const descHtml = item.description ? `<p>${item.description}</p>` : '';
-            const priceHtml = item.priceFrom ? `<div class="price">From Rs. ${item.price}</div>` : `<div class="price">Rs. ${item.price}</div>`;
-
-            html += `
-                <div class="product-card" data-name="${item.name.toLowerCase()}" onclick="openProductDetail(${item.id})">
-                    <div class="product-info">
-                        <div>
-                            <h4>${item.name}</h4>
-                            ${descHtml}
-                        </div>
-                        ${priceHtml}
-                    </div>
-                    <div class="product-image-container">
-                        ${badgeHtml}
-                        <img class="product-img" src="${imageSrc(item.image)}" alt="${item.name}">
-                        <div class="product-action" id="cart-action-${item.id}" onclick="event.stopPropagation()">${renderCartActionHTML(item.id)}</div>
-                    </div>
-                </div>
-            `;
-        });
-
-        html += `</div>`;
-        section.innerHTML = html;
+        const itemsHtml = category.items.map(renderProductCardHTML).join('');
+        const catImage = CATEGORY_IMAGES[category.categoryId];
+        const headerHtml = catImage
+            ? `<div class="category-header"><img class="category-header-img" src="${imageSrc(catImage)}" alt="${category.title}"><h2>${category.title}</h2></div>`
+            : `<h2>${category.title}</h2>`;
+        section.innerHTML = `${headerHtml}<div class="product-grid">${itemsHtml}</div>`;
         gridContainer.appendChild(section);
     });
 }
 
 // --- Live Search Functionality ---
-// Scrolls to and focuses the menu search input - used by the floating
-// search button. No-op on pages that don't have a search bar (e.g. the
-// About Us / Franchise / Timings pages).
-function scrollToSearch() {
-    const input = document.getElementById('menu-search');
-    if (!input) return;
-    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => input.focus(), 400);
-}
 
 // Cycles the search bar's placeholder through random dish names, e.g.
 // "Search for Crispy Chicken..." -> "Search for FIFA Duo Deal..." - the
@@ -328,13 +425,7 @@ function filterMenu() {
 
 // --- Sidebar & Overlay Logic ---
 // These are assigned once header.html has been injected into the page (see loadHeader/init below)
-let overlay, navSidebar, cartSidebar;
-
-function toggleNav() {
-    if (!navSidebar) return;
-    navSidebar.classList.toggle('open');
-    checkOverlay();
-}
+let overlay, cartSidebar;
 
 function toggleCart() {
     if (!cartSidebar) return;
@@ -343,8 +434,8 @@ function toggleCart() {
 }
 
 function checkOverlay() {
-    if (!overlay || !navSidebar || !cartSidebar) return;
-    if (navSidebar.classList.contains('open') || cartSidebar.classList.contains('open')) {
+    if (!overlay || !cartSidebar) return;
+    if (cartSidebar.classList.contains('open')) {
         overlay.classList.add('active');
     } else {
         overlay.classList.remove('active');
@@ -570,11 +661,6 @@ function getReadyTimeText(orderType) {
 function updateCartUI() {
     const cartBody = document.getElementById('cart-content');
     const cartFooter = document.getElementById('cart-footer-actions');
-    const floatingBtn = document.getElementById('floating-cart-btn');
-    const floatingBadge = document.getElementById('floating-cart-badge');
-    const viewCartBar = document.getElementById('sticky-viewcart-bar');
-    const viewCartBadge = document.getElementById('viewcart-badge');
-    const viewCartTotal = document.getElementById('viewcart-total');
     const headerBadge = document.getElementById('cart-badge');
 
     // Keep every product card's +/stepper button in sync
@@ -601,8 +687,6 @@ function updateCartUI() {
         cartFooter.style.display = 'none';
         cartFooter.innerHTML = '';
 
-        if (floatingBtn) floatingBtn.style.display = 'none';
-        if (viewCartBar) viewCartBar.style.display = 'none';
         if (headerBadge) headerBadge.style.display = 'none';
         return;
     }
@@ -653,28 +737,129 @@ function updateCartUI() {
         <p class="ready-time-text">${ready.text}</p>
     `;
 
-    if (floatingBtn && floatingBadge) {
-        floatingBtn.style.display = 'flex';
-        floatingBadge.innerText = totalItems;
-    }
-    if (viewCartBar && viewCartBadge && viewCartTotal) {
-        viewCartBar.style.display = 'block';
-        viewCartBadge.innerText = totalItems;
-        viewCartTotal.innerText = `Rs. ${grandTotal}`;
-    }
     if (headerBadge) {
         headerBadge.style.display = 'flex';
         headerBadge.innerText = totalItems;
     }
 }
 
-// Builds an itemized order summary and opens a WhatsApp chat to the
-// restaurant's number with the message pre-filled.
+// Opens the "Delivery Details" modal so the customer can confirm order
+// type, name, phone, and (for delivery) their address before we build the
+// WhatsApp message. Pre-fills fields from their last order, if any.
 function checkoutViaWhatsApp() {
     if (cart.length === 0) return;
 
-    const orderType = localStorage.getItem('orderType') || 'Delivery';
-    const location = localStorage.getItem('location') || 'Not selected';
+    const overlay = document.getElementById('checkout-details-overlay');
+    if (!overlay) return;
+
+    const savedType = localStorage.getItem('orderType') || 'Delivery';
+    document.getElementById('cd-name').value = localStorage.getItem('customerName') || '';
+    document.getElementById('cd-phone').value = localStorage.getItem('customerPhone') || '';
+    document.getElementById('cd-address').value = localStorage.getItem('customerAddress') || '';
+    document.getElementById('cd-error').style.display = 'none';
+    document.getElementById('cd-location-status').textContent = '';
+    document.getElementById('cd-location-status').className = 'cd-location-status';
+
+    selectOrderType(savedType);
+    overlay.classList.add('active');
+}
+
+function closeCheckoutDetails() {
+    const overlay = document.getElementById('checkout-details-overlay');
+    if (overlay) overlay.classList.remove('active');
+}
+
+// Highlights the chosen order type and shows/hides the address field
+// (only Delivery orders need a drop-off address).
+function selectOrderType(type) {
+    document.querySelectorAll('.order-type-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.orderType === type);
+    });
+    const addressGroup = document.getElementById('cd-address-group');
+    if (addressGroup) addressGroup.style.display = (type === 'Delivery') ? 'block' : 'none';
+}
+
+function getSelectedOrderType() {
+    const activeBtn = document.querySelector('.order-type-btn.active');
+    return activeBtn ? activeBtn.dataset.orderType : 'Delivery';
+}
+
+// Uses the browser's geolocation API to grab the customer's exact
+// coordinates and appends a Google Maps link to the address field, so the
+// delivery rider can navigate straight to the pin instead of relying on a
+// written description alone.
+function useCurrentLocation() {
+    const status = document.getElementById('cd-location-status');
+    const addressField = document.getElementById('cd-address');
+
+    if (!navigator.geolocation) {
+        status.textContent = 'Location sharing is not supported on this browser.';
+        status.className = 'cd-location-status err';
+        return;
+    }
+
+    status.textContent = 'Getting your location…';
+    status.className = 'cd-location-status';
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const { latitude, longitude } = position.coords;
+            const mapsLink = `https://maps.google.com/?q=${latitude},${longitude}`;
+            // Strip any previously-attached map link before adding the new one.
+            const existing = addressField.value.replace(/\s*Pin location: https:\/\/maps\.google\.com\/\?q=[^\s]+/, '').trim();
+            addressField.value = existing ? `${existing}\nPin location: ${mapsLink}` : `Pin location: ${mapsLink}`;
+            status.textContent = 'Location added ✓ — you can still add landmark details above.';
+            status.className = 'cd-location-status ok';
+        },
+        (err) => {
+            let msg = 'Could not get your location. Please type your address instead.';
+            if (err.code === err.PERMISSION_DENIED) msg = 'Location access denied. Please type your address instead.';
+            status.textContent = msg;
+            status.className = 'cd-location-status err';
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+}
+
+// Validates the details form, saves it for next time, then hands off to
+// the WhatsApp message builder.
+function confirmCheckoutDetails() {
+    const errorEl = document.getElementById('cd-error');
+    const name = document.getElementById('cd-name').value.trim();
+    const phone = document.getElementById('cd-phone').value.trim();
+    const address = document.getElementById('cd-address').value.trim();
+    const orderType = getSelectedOrderType();
+
+    if (!name) return showCdError('Please enter your full name.');
+    if (!phone || phone.replace(/\D/g, '').length < 10) {
+        return showCdError('Please enter a valid phone number so the rider can reach you.');
+    }
+    if (orderType === 'Delivery' && !address) {
+        return showCdError('Please enter your delivery address, or share your current location.');
+    }
+
+    errorEl.style.display = 'none';
+
+    localStorage.setItem('customerName', name);
+    localStorage.setItem('customerPhone', phone);
+    localStorage.setItem('customerAddress', address);
+    localStorage.setItem('orderType', orderType);
+
+    closeCheckoutDetails();
+    sendOrderToWhatsApp({ name, phone, address, orderType });
+}
+
+function showCdError(message) {
+    const errorEl = document.getElementById('cd-error');
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+}
+
+// Builds an itemized order summary (including the customer's name, phone,
+// order type, and delivery address) and opens a WhatsApp chat to the
+// restaurant's number with the message pre-filled.
+function sendOrderToWhatsApp({ name, phone, address, orderType }) {
+    if (cart.length === 0) return;
 
     let subtotal = 0;
     const lines = cart.map(item => {
@@ -689,12 +874,15 @@ function checkoutViaWhatsApp() {
     const ready = getReadyTimeText(orderType);
     const readyPlain = ready.text.replace(/<[^>]*>/g, '');
 
+    const addressLine = (orderType === 'Delivery' && address) ? `Delivery Address: ${address}\n` : '';
+
     const message =
 `New Order Request - Hot N Spicy
 
+Customer Name: ${name}
+Phone: ${phone}
 Order Type: ${orderType}
-Location/Branch: ${location}
-
+${addressLine}
 Items:
 ${lines}
 
@@ -703,40 +891,6 @@ Tax (15%): Rs. ${tax}
 Grand Total: Rs. ${grandTotal}
 
 ${readyPlain}`;
-
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
-}
-
-
-// --- Franchise Inquiry Form (franchise.html) ---
-// Builds a pre-filled WhatsApp message from the franchise form fields.
-function submitFranchiseInquiry(event) {
-    event.preventDefault();
-
-    const fullName = document.getElementById('franchise-name')?.value.trim();
-    const email = document.getElementById('franchise-email')?.value.trim();
-    const phone = document.getElementById('franchise-phone')?.value.trim();
-    const city = document.getElementById('franchise-city')?.value.trim();
-    const capacity = document.getElementById('franchise-capacity')?.value;
-    const messageText = document.getElementById('franchise-message')?.value.trim();
-
-    if (!fullName || !phone) {
-        alert('Please fill in at least your Full Name and Phone number.');
-        return;
-    }
-
-    const message =
-`New Franchise Inquiry - Hot N Spicy
-
-Full Name: ${fullName}
-Email: ${email || '-'}
-Phone: ${phone}
-City: ${city || '-'}
-Investment Capacity: ${capacity || '-'}
-
-Message:
-${messageText || '-'}`;
 
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
