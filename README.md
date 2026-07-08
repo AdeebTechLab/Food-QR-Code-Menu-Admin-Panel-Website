@@ -1,10 +1,8 @@
 # Food-QR-Code-Menu-Admin-Panel-Website
 
-## Admin Panel Credentials
+## Admin Panel
 
-**Admin URL:** https://hotnspicy.vercel.app/admin/login.html
+Admin URL: `/admin/login.html`
 
-**Username:** adeeb
-
-**Password:** Abc@123
-
+Requires a GitHub personal access token with **write** access to this repo to log in.
+See `SETUP.md` for how to create one and how the panel works.
