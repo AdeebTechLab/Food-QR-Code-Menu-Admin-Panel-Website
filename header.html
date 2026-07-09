@@ -40,13 +40,13 @@
                 <p id="pd-description" class="pd-description"></p>
                 <div id="pd-variant-picker" class="pd-variant-picker" style="display:none;"></div>
                 <div id="pd-footer" class="pd-footer">
-                    <div class="qty-stepper pd-qty-stepper">
+                    <div id="pd-qty-stepper-wrap" class="qty-stepper pd-qty-stepper">
                         <button class="qty-btn qty-remove" onclick="updatePdQty(-1)" aria-label="Decrease">&minus;</button>
                         <span id="pd-qty" class="qty-count">1</span>
                         <button class="qty-btn qty-add" onclick="updatePdQty(1)" aria-label="Increase">+</button>
                     </div>
                     <button id="pd-add-to-cart" class="pd-add-btn" onclick="addPdToCart()">
-                        <span id="pd-add-price"></span> <span class="pd-add-divider">|</span> Add to Cart
+                        <span id="pd-add-price"></span> <span id="pd-add-divider" class="pd-add-divider">|</span> <span id="pd-add-label">Add to Cart</span>
                         <svg class="icon" style="stroke:white" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </button>
                 </div>

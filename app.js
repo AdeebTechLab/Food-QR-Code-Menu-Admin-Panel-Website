@@ -641,13 +641,61 @@ function openProductDetail(id) {
     updatePdPricing(item);
 
     // Variant items (Half/Full, Small/Medium/Large, 250ml/1 Litre, etc.)
-    // add straight from the row list below, so the generic qty-stepper +
-    // "Add to Cart" bar only applies to single-price items.
-    const footer = document.getElementById('pd-footer');
-    if (footer) footer.style.display = hasVariants(item) ? 'none' : 'flex';
+    // add straight from each row, so the qty-stepper here stays hidden for
+    // them - but the footer itself stays visible as a summary "Add to
+    // Cart" bar (showing running total + count) that just closes the
+    // modal once at least one size has been added, so the sheet always
+    // ends with a clear, tappable confirm action.
+    setupPdFooter(item);
 
     document.getElementById('product-detail-overlay').classList.add('active');
     document.body.style.overflow = 'hidden';
+}
+
+// Configures the footer bar for the item currently open in the modal:
+// plain items keep the qty-stepper + "Add to Cart" button (adds pdQty and
+// closes); variant items hide the qty-stepper and turn the button into a
+// running summary of everything picked so far.
+function setupPdFooter(item) {
+    const qtyWrap = document.getElementById('pd-qty-stepper-wrap');
+    const addBtn = document.getElementById('pd-add-to-cart');
+
+    if (hasVariants(item)) {
+        qtyWrap.style.display = 'none';
+        addBtn.onclick = closeProductDetail;
+        updatePdVariantFooterSummary(item);
+    } else {
+        qtyWrap.style.display = 'flex';
+        addBtn.onclick = addPdToCart;
+        document.getElementById('pd-add-price').style.display = 'inline';
+        document.getElementById('pd-add-divider').style.display = 'inline';
+        document.getElementById('pd-add-label').innerText = 'Add to Cart';
+    }
+}
+
+// Updates the footer "Add to Cart" button for a variant item to reflect
+// everything currently in the cart for it - e.g. "Rs. 2350 | Add to Cart
+// (3)" - or a plain "Done" button once nothing has been picked yet.
+function updatePdVariantFooterSummary(item) {
+    const lines = cart.filter(i => i.id === item.id);
+    const totalQty = lines.reduce((sum, i) => sum + i.qty, 0);
+    const totalPrice = lines.reduce((sum, i) => sum + i.qty * i.price, 0);
+
+    const priceEl = document.getElementById('pd-add-price');
+    const dividerEl = document.getElementById('pd-add-divider');
+    const labelEl = document.getElementById('pd-add-label');
+
+    if (totalQty > 0) {
+        priceEl.innerText = `Rs. ${totalPrice}`;
+        priceEl.style.display = 'inline';
+        dividerEl.style.display = 'inline';
+        labelEl.innerText = `Add to Cart (${totalQty})`;
+    } else {
+        priceEl.innerText = '';
+        priceEl.style.display = 'none';
+        dividerEl.style.display = 'none';
+        labelEl.innerText = 'Done';
+    }
 }
 
 // Shows a stacked list of size/option rows (Half above Full, Small above
@@ -710,13 +758,19 @@ function pdVariantActionHTML(itemId, label) {
 function addPdVariantToCart(itemId, label) {
     addToCart(itemId, 1, '', label);
     const item = allItemsById[itemId];
-    if (item) renderPdVariantPicker(item);
+    if (item) {
+        renderPdVariantPicker(item);
+        updatePdVariantFooterSummary(item);
+    }
 }
 
 function updatePdVariantQty(key, change) {
     updateQty(key, change);
     const item = allItemsById[pdCurrentId];
-    if (item) renderPdVariantPicker(item);
+    if (item) {
+        renderPdVariantPicker(item);
+        updatePdVariantFooterSummary(item);
+    }
 }
 
 function updatePdPricing(item) {
