@@ -195,28 +195,19 @@ svg.icon { width: 18px; height: 18px; stroke: currentColor; stroke-width: var(--
 .pd-add-btn { flex: 1; background: var(--brand-green); color: white; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .pd-add-divider { opacity: 0.6; font-weight: 400; }
 
-/* --- Variant Picker dropdown (Half / Full, Small / Medium / Large / Bottle, etc.) --- */
+/* --- Variant Picker list (Half / Full, Small / Medium / Large, 250ml / 1 Litre, etc.) ---
+   Always stacked in the order the admin entered them (Half above Full,
+   Small above Medium above Large, ...) rather than a dropdown, and each
+   row's own "+"/qty-stepper controls that row directly. */
 .pd-variant-picker { margin-bottom: 20px; }
-.pd-variant-label { display: block; font-weight: 700; font-size: 0.92rem; margin-bottom: 8px; }
-.pd-variant-select {
-    width: 100%;
-    border: 1.5px solid var(--border-grey);
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-family: inherit;
-    font-size: 0.92rem;
-    font-weight: 600;
-    background: var(--white);
-    cursor: pointer;
-    outline: none;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    background-size: 16px;
-}
-.pd-variant-select:focus { border-color: var(--brand-green); }
+.pd-variant-label { display: block; font-weight: 700; font-size: 0.92rem; margin-bottom: 10px; }
+.pd-variant-list { display: flex; flex-direction: column; gap: 10px; }
+.pd-variant-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1.5px solid var(--border-grey); border-radius: 10px; padding: 10px 14px; }
+.pd-variant-row-info { display: flex; flex-direction: column; gap: 2px; }
+.pd-variant-row-label { font-weight: 700; font-size: 0.95rem; }
+.pd-variant-row-price { color: var(--text-muted); font-size: 0.85rem; }
+.pd-variant-row-action { flex-shrink: 0; }
+.pd-variant-row-action .add-btn { background: var(--brand-green); color: white; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; }
 
 /* Small quantity badge on a card's "+" button when a multi-variant item
    already has one or more variants in the cart. */
@@ -231,7 +222,7 @@ svg.icon { width: 18px; height: 18px; stroke: currentColor; stroke-width: var(--
 .checkout-details-header h3 { font-size: 1.15rem; font-weight: 800; }
 .checkout-details-body { padding: 20px 24px; overflow-y: auto; }
 .cd-label { display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; margin-top: 16px; }
-.cd-label:first-child { margin-top: 0; }
+.checkout-details-body > .cd-label:first-child { margin-top: 0; }
 .cd-input { width: 100%; border: 1px solid var(--border-grey); border-radius: 8px; padding: 11px 14px; font-family: inherit; font-size: 0.92rem; outline: none; }
 .cd-input:focus { border-color: var(--brand-green); }
 .cd-textarea { min-height: 80px; resize: vertical; margin-bottom: 10px; }

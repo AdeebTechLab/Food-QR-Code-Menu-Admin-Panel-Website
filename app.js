@@ -622,7 +622,6 @@ function updateQty(key, change) {
 // --- Product Detail Modal ---
 let pdCurrentId = null;
 let pdQty = 1;
-let pdSelectedVariant = null; // label of the currently-chosen variant, or null
 
 function openProductDetail(id) {
     const item = allItemsById[id];
@@ -630,7 +629,6 @@ function openProductDetail(id) {
 
     pdCurrentId = id;
     pdQty = 1;
-    pdSelectedVariant = hasVariants(item) ? item.variants[0].label : null;
 
     document.getElementById('pd-image').src = imageSrc(item.image);
     document.getElementById('pd-image').alt = item.name;
@@ -642,15 +640,23 @@ function openProductDetail(id) {
     renderPdVariantPicker(item);
     updatePdPricing(item);
 
+    // Variant items (Half/Full, Small/Medium/Large, 250ml/1 Litre, etc.)
+    // add straight from the row list below, so the generic qty-stepper +
+    // "Add to Cart" bar only applies to single-price items.
+    const footer = document.getElementById('pd-footer');
+    if (footer) footer.style.display = hasVariants(item) ? 'none' : 'flex';
+
     document.getElementById('product-detail-overlay').classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
-// Shows a size/option dropdown (Half / Full, Small / Medium / Large,
-// Bottle, etc.) when the item has variants, so the customer picks one
-// before adding to cart. Hidden entirely for plain single-price items.
-// Driven purely by item.variants, so it works the same way for any set
-// of variant labels - no per-label logic needed.
+// Shows a stacked list of size/option rows (Half above Full, Small above
+// Medium above Large, etc. - always in the order the admin entered them)
+// when the item has variants. Each row starts with a plain "+" button;
+// tapping it adds that variant straight to the cart and the button turns
+// into a qty stepper right there next to that row, so quantity only shows
+// up once a size has actually been chosen. Hidden entirely for plain
+// single-price items.
 function renderPdVariantPicker(item) {
     const wrap = document.getElementById('pd-variant-picker');
     if (!wrap) return;
@@ -662,37 +668,67 @@ function renderPdVariantPicker(item) {
     }
 
     wrap.style.display = 'block';
-    const options = item.variants.map(v => `
-        <option value="${v.label.replace(/"/g, '&quot;')}" ${v.label === pdSelectedVariant ? 'selected' : ''}>
-            ${v.label} — Rs. ${v.price}
-        </option>
+    const rows = item.variants.map((v, idx) => `
+        <div class="pd-variant-row">
+            <div class="pd-variant-row-info">
+                <span class="pd-variant-row-label">${v.label}</span>
+                <span class="pd-variant-row-price">Rs. ${v.price}</span>
+            </div>
+            <div class="pd-variant-row-action" id="pd-variant-action-${item.id}-${idx}">
+                ${pdVariantActionHTML(item.id, v.label)}
+            </div>
+        </div>
     `).join('');
+
     wrap.innerHTML = `
-        <label for="pd-variant-select" class="pd-variant-label">Select Option</label>
-        <select id="pd-variant-select" class="pd-variant-select" onchange="selectPdVariant(this.value)">
-            ${options}
-        </select>
+        <span class="pd-variant-label">Select Option</span>
+        <div class="pd-variant-list">${rows}</div>
     `;
 }
 
-function selectPdVariant(label) {
-    pdSelectedVariant = label;
-    const item = allItemsById[pdCurrentId];
-    if (!item) return;
-    updatePdPricing(item);
+// The "+" button, or qty stepper once that specific variant is in the
+// cart, shown inline in a pd-variant-row.
+function pdVariantActionHTML(itemId, label) {
+    const key = cartKey(itemId, label);
+    const cartItem = cart.find(i => i.cartKey === key);
+
+    if (cartItem) {
+        return `
+            <div class="qty-stepper">
+                <button class="qty-btn qty-remove" onclick="updatePdVariantQty('${key}', -1)" aria-label="Decrease">&minus;</button>
+                <span class="qty-count">${cartItem.qty}</span>
+                <button class="qty-btn qty-add" onclick="updatePdVariantQty('${key}', 1)" aria-label="Add">+</button>
+            </div>`;
+    }
+
+    const safeLabel = label.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    return `<button class="add-btn" onclick="addPdVariantToCart(${itemId}, '${safeLabel}')" aria-label="Add ${label}">+</button>`;
 }
 
-function currentPdUnitPrice(item) {
-    if (hasVariants(item)) {
-        const variant = item.variants.find(v => v.label === pdSelectedVariant) || item.variants[0];
-        return variant.price;
-    }
-    return item.price;
+// Adds one of a specific variant straight from its row, then re-renders
+// just the variant list so that row's "+" turns into a qty stepper.
+function addPdVariantToCart(itemId, label) {
+    addToCart(itemId, 1, '', label);
+    const item = allItemsById[itemId];
+    if (item) renderPdVariantPicker(item);
+}
+
+function updatePdVariantQty(key, change) {
+    updateQty(key, change);
+    const item = allItemsById[pdCurrentId];
+    if (item) renderPdVariantPicker(item);
 }
 
 function updatePdPricing(item) {
-    const unitPrice = currentPdUnitPrice(item);
     const pdPriceEl = document.getElementById('pd-price');
+
+    if (hasVariants(item)) {
+        const minPrice = Math.min(...item.variants.map(v => v.price));
+        pdPriceEl.innerText = `From Rs. ${minPrice}`;
+        return;
+    }
+
+    const unitPrice = item.price;
     if (hasDiscount(item)) {
         pdPriceEl.innerHTML = `<span class="pd-price-old">Rs. ${item.oldPrice}</span> Rs. ${unitPrice}`;
     } else {
@@ -705,7 +741,6 @@ function closeProductDetail() {
     document.getElementById('product-detail-overlay').classList.remove('active');
     document.body.style.overflow = '';
     pdCurrentId = null;
-    pdSelectedVariant = null;
 }
 
 function updatePdQty(change) {
@@ -717,7 +752,7 @@ function updatePdQty(change) {
 
 function addPdToCart() {
     if (pdCurrentId === null) return;
-    addToCart(pdCurrentId, pdQty, '', pdSelectedVariant);
+    addToCart(pdCurrentId, pdQty, '', null);
     closeProductDetail();
 }
 
