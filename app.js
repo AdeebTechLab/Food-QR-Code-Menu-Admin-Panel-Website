@@ -662,7 +662,7 @@ function setupPdFooter(item) {
 
     if (hasVariants(item)) {
         qtyWrap.style.display = 'none';
-        addBtn.onclick = handlePdVariantAddClick;
+        addBtn.onclick = closeProductDetail;
         updatePdVariantFooterSummary(item);
     } else {
         qtyWrap.style.display = 'flex';
@@ -675,9 +675,7 @@ function setupPdFooter(item) {
 
 // Updates the footer "Add to Cart" button for a variant item to reflect
 // everything currently in the cart for it - e.g. "Rs. 2350 | Add to Cart
-// (3)" once something's been picked, or the first/top option's price
-// beforehand (e.g. "Rs. 800 | Add to Cart") so the button is always a real,
-// working add action rather than a dead-looking "Done".
+// (3)" - or a plain "Done" button once nothing has been picked yet.
 function updatePdVariantFooterSummary(item) {
     const lines = cart.filter(i => i.id === item.id);
     const totalQty = lines.reduce((sum, i) => sum + i.qty, 0);
@@ -687,32 +685,17 @@ function updatePdVariantFooterSummary(item) {
     const dividerEl = document.getElementById('pd-add-divider');
     const labelEl = document.getElementById('pd-add-label');
 
-    priceEl.style.display = 'inline';
-    dividerEl.style.display = 'inline';
-
     if (totalQty > 0) {
         priceEl.innerText = `Rs. ${totalPrice}`;
+        priceEl.style.display = 'inline';
+        dividerEl.style.display = 'inline';
         labelEl.innerText = `Add to Cart (${totalQty})`;
     } else {
-        priceEl.innerText = `Rs. ${item.variants[0].price}`;
-        labelEl.innerText = 'Add to Cart';
+        priceEl.innerText = '';
+        priceEl.style.display = 'none';
+        dividerEl.style.display = 'none';
+        labelEl.innerText = 'Done';
     }
-}
-
-// Click handler for the footer button on a variant item. If nothing has
-// been picked yet, it adds one of the first/top option (e.g. Half) so the
-// button always actually adds something to the cart; if one or more
-// variants were already added via their own row, it just confirms and
-// closes since those additions already happened.
-function handlePdVariantAddClick() {
-    const item = allItemsById[pdCurrentId];
-    if (!item) return;
-
-    const totalQty = cart.filter(i => i.id === item.id).reduce((sum, i) => sum + i.qty, 0);
-    if (totalQty === 0) {
-        addToCart(item.id, 1, '', item.variants[0].label);
-    }
-    closeProductDetail();
 }
 
 // Shows a stacked list of size/option rows (Half above Full, Small above
